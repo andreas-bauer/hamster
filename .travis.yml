@@ -3,6 +3,8 @@ language: go
 go:
   - "1.10"
   
+go_import_path: internal
+  
 before_install:
   - go get -t -v ./...
 
