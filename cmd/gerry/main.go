@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/michaeldorner/GoGerry/internal"
+	"Gerry/internal"
 	"fmt"
 )
 
