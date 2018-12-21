@@ -2,9 +2,7 @@ language: go
 
 go:
   - "1.10"
-  
-go_import_path: github.com/michaeldorner/GoGerry
-  
+   
 before_install:
   - go get -t -v ./...
 
