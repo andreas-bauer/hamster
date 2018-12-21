@@ -1,4 +1,4 @@
-package internal
+package gerrit
 
 import (
 	"encoding/json"

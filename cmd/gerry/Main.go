@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/michaeldorner/samla/samla"
+	"github.com/michaeldorner/hamster/backend/gerrit"
 	"fmt"
 )
 

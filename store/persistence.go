@@ -1,4 +1,4 @@
-package internal
+package store
 
 import (
 	"encoding/json"
@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/michaeldorner/Hamster/config"
 )
 
 type Persistence struct {
@@ -13,8 +15,8 @@ type Persistence struct {
 	outDir     string
 }
 
-func LoadConfigurationFile(configurationFilePath string) (*Configuration, error) {
-	var configuration Configuration
+func LoadConfigurationFile(configurationFilePath string) (*config.Configuration, error) {
+	var configuration config.Configuration
 	jsonData, err := ioutil.ReadFile(configurationFilePath)
 	if err != nil {
 		return nil, err
@@ -60,7 +62,7 @@ func (persistence Persistence) StoreUnit(id string, payload []byte) error {
 	return ioutil.WriteFile(path, payload, 0644)
 }
 
-func (persistence Persistence) StoreConfiguration(configuration Configuration) error {
+func (persistence Persistence) StoreConfiguration(configuration config.Configuration) error {
 	data, err := json.MarshalIndent(configuration, "", "    ")
 	if err != nil {
 		return err

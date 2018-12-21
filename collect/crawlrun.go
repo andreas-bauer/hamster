@@ -1,4 +1,9 @@
-package internal
+package collect
+
+import (
+	"github.com/michaeldorner/Hamster/config"
+	"github.com/michaeldorner/Hamster/store"
+)
 
 type Unit struct {
 	ID      string

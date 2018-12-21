@@ -1,4 +1,4 @@
-package internal
+package config
 
 import (
 	"errors"
@@ -23,7 +23,6 @@ type Configuration struct {
 	Retries           int        `json:"retries"`
 	TimeOut           int        `json:"timeOut"`
 	SkipExistingFiles bool       `json:"skipExistingFiles"`
-	ReviewTool        ReviewTool `json:"reviewTool"`
 }
 
 var TestConfiguration Configuration = Configuration{
@@ -35,5 +34,4 @@ var TestConfiguration Configuration = Configuration{
 	Retries:           2,
 	TimeOut:           60,
 	SkipExistingFiles: true,
-	ReviewTool:        "Gerrit",
 }
