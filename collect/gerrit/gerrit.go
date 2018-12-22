@@ -5,10 +5,26 @@ import (
 	"fmt"
 	"net/url"
 	"time"
+	"github.com/michaeldorner/hamster/collect"
 )
 
-func (crawlRun CrawlRun) createGerritUnits() <-chan Unit {
-	units := make(chan Unit)
+func Run(filePath string) {
+	crawlRun, err := LoadCrawlRunFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+
+	channel_1 := Generate(crawlRun)
+	channel_2 := collect.Filter(channel_1, crawlRun)
+	channel_3 := collect.GetPayload(channel_2, crawlRun)
+	channel_4 := PostProcess(channel_3, crawlRun)
+	
+	collect.store(channel_4, crawlRun)
+
+}
+
+func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
+	units := make(chan collect.Unit)
 	go func() {
 		defer close(units)
 		startDate := crawlRun.configuration.FromDate
@@ -54,7 +70,7 @@ func (crawlRun CrawlRun) createGerritUnits() <-chan Unit {
 	return units
 }
 
-func (crawlRun CrawlRun) postProcessGerritUnits(in <-chan Unit) <-chan Unit {
+func PostProcess(in <-chan Unit, crawlRun collect.CrawlRun) <-chan Unit {
 	units := make(chan Unit)
 	go func() {
 		defer close(units)

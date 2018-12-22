@@ -1,4 +1,4 @@
-package store
+package persistence
 
 import (
 	"encoding/json"
@@ -6,8 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-
-	"github.com/michaeldorner/Hamster/config"
+	"github.com/michaeldorner/Hamster/collect"
 )
 
 type Persistence struct {
@@ -15,8 +14,8 @@ type Persistence struct {
 	outDir     string
 }
 
-func LoadConfigurationFile(configurationFilePath string) (*config.Configuration, error) {
-	var configuration config.Configuration
+func LoadCrawlRunFile(configurationFilePath string) (*collect.CrawlRun, error) {
+	var configuration config.CrawlRun
 	jsonData, err := ioutil.ReadFile(configurationFilePath)
 	if err != nil {
 		return nil, err
@@ -40,7 +39,7 @@ func NewPersistence(outDir, crawlRunID string) Persistence {
 	return persistence
 }
 
-func (persistence Persistence) ConfigurationFilePath() string {
+func (persistence Persistence) CrawlRunFilePath() string {
 	return filepath.Clean(persistence.outDir + "/" + persistence.crawlRunID + "/config.json")
 }
 
@@ -62,10 +61,10 @@ func (persistence Persistence) StoreUnit(id string, payload []byte) error {
 	return ioutil.WriteFile(path, payload, 0644)
 }
 
-func (persistence Persistence) StoreConfiguration(configuration config.Configuration) error {
+func (persistence Persistence) StoreCrawlRun(configuration config.CrawlRun) error {
 	data, err := json.MarshalIndent(configuration, "", "    ")
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(persistence.ConfigurationFilePath(), data, os.ModePerm)
+	return ioutil.WriteFile(persistence.CrawlRunFilePath(), data, os.ModePerm)
 }
