@@ -20,15 +20,15 @@ type CrawlRun struct {
 	Persistence       store.Persistence
 }
 
-var standardPersistence store.Persistence = store.NewPersistence("/Users/michaeldorner/Desktop/Gerry/", "TEST")
+var standardPersistence store.Persistence = store.NewPersistence("/Users/michaeldorner/Desktop/Gerry/", "TESTID")
 var standardHTTPClient = NewRetryHTTPClient(60, 2, standardPersistence.LogFile())
 
 var TestCrawlRun CrawlRun = CrawlRun{
-	ID:                "TEST",
+	ID:                "TESTID",
 	URL:               "https://review.openstack.org",
 	FromDate:          time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC),
 	ToDate:            time.Date(2016, 1, 2, 0, 0, 0, 0, time.UTC),
-	OutDir:            "/Users/michaeldorner/Desktop/Gerry/",
+	OutDir:            "./Users/michaeldorner/Desktop/Gerry/",
 	Retries:           10,
 	Timeout:           60,
 	SkipExistingFiles: true,
