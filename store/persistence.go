@@ -12,7 +12,6 @@ type Persistence struct {
 	outDir     string
 }
 
-
 func NewPersistence(outDir, crawlRunID string) Persistence {
 	var persistence Persistence = Persistence{
 		outDir:     outDir,
@@ -54,4 +53,3 @@ func (persistence Persistence) StoreUnit(id string, payload []byte) error {
 	path := persistence.UnitFilePath(id)
 	return ioutil.WriteFile(path, payload, 0644)
 }
-

@@ -18,7 +18,7 @@ func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 		size := int(endDate.Sub(startDate).Hours()/24) + 1
 		counter := 0
 
-		for d := startDate; d.Before(endDate.AddDate(0, 0, 1)); d = d.AddDate(0, 0, 1) {
+		for d := startDate; !d.After(endDate); d = d.AddDate(0, 0, 1) {
 			counter = counter + 1
 			fmt.Printf("\rProcessing day %v (%v/%v - %3.1f %%)", d.Format("2006-01-02"), counter, size, float32(counter)/float32(size)*100.0)
 

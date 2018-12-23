@@ -2,6 +2,6 @@ package collect
 
 import "testing"
 
-func TestGet(t *testing.T) {
+func TestT(t *testing.T) {
 
 }

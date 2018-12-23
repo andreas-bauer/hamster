@@ -3,11 +3,11 @@ package collect
 import (
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
-	"log"
-	"os"
 )
 
 var ErrMaxRetries = errors.New("error reached max retries")
@@ -15,7 +15,7 @@ var ErrMaxRetries = errors.New("error reached max retries")
 type RetryHTTPClient struct {
 	hc         http.Client
 	MaxRetries int
-	Log *log.Logger
+	Log        *log.Logger
 }
 
 func NewRetryHTTPClient(timeOut, maxRetries int, logFile *os.File) RetryHTTPClient {
@@ -24,7 +24,7 @@ func NewRetryHTTPClient(timeOut, maxRetries int, logFile *os.File) RetryHTTPClie
 			Timeout: time.Duration(timeOut) * time.Second,
 		},
 		MaxRetries: maxRetries,
-		Log:    log.New(logFile, "", 0),
+		Log:        log.New(logFile, "", 0),
 	}
 }
 
