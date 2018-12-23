@@ -4,12 +4,12 @@ import (
 	"github.com/michaeldorner/hamster/collect"
 )
 
-func Filter(in <-chan Unit, crawlRun CrawlRun) <-chan Unit {
-	out := make(chan Unit)
+func Filter(in <-chan collect.Unit, crawlRun collect.CrawlRun) <-chan collect.Unit {
+	out := make(chan collect.Unit)
 	go func() {
 		defer close(out)
 		for unit := range in {
-			if crawlRun.configuration.SkipExistingFiles != crawlRun.persistence.UnitFileExists(unit.ID) {
+			if crawlRun.SkipExistingFiles != crawlRun.Persistence.UnitFileExists(unit.ID) {
 				out <- unit
 			}
 		}
@@ -17,12 +17,12 @@ func Filter(in <-chan Unit, crawlRun CrawlRun) <-chan Unit {
 	return out
 }
 
-func GetPayload(in <-chan Unit, crawlRun CrawlRun) <-chan Unit {
-	out := make(chan Unit)
+func GetPayload(in <-chan collect.Unit, crawlRun collect.CrawlRun) <-chan collect.Unit {
+	out := make(chan collect.Unit)
 	go func() {
 		defer close(out)
 		for unit := range in {
-			payload, err := crawlRun.httpClient.Get(unit.URL)
+			payload, err := crawlRun.HTTPClient.Get(unit.URL)
 			if err != nil {
 				panic(err)
 			} else {
@@ -34,10 +34,9 @@ func GetPayload(in <-chan Unit, crawlRun CrawlRun) <-chan Unit {
 	return out
 }
 
-
-func Store(in <-chan Unit, crawlRun CrawlRun) {
+func Store(in <-chan collect.Unit, crawlRun collect.CrawlRun) {
 	for unit := range in {
-		err := crawlRun.persistence.StoreUnit(unit.ID, unit.Payload)
+		err := crawlRun.Persistence.StoreUnit(unit.ID, unit.Payload)
 		if err != nil {
 			panic(err)
 		}

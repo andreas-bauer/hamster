@@ -3,46 +3,32 @@ package gerrit
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/michaeldorner/hamster/collect"
 	"net/url"
 	"time"
-	"github.com/michaeldorner/hamster/collect"
 )
-
-func Run(filePath string) {
-	crawlRun, err := LoadCrawlRunFile(filePath)
-	if err != nil {
-		panic(err)
-	}
-
-	channel_1 := Generate(crawlRun)
-	channel_2 := collect.Filter(channel_1, crawlRun)
-	channel_3 := collect.GetPayload(channel_2, crawlRun)
-	channel_4 := PostProcess(channel_3, crawlRun)
-	
-	collect.store(channel_4, crawlRun)
-
-}
 
 func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 	units := make(chan collect.Unit)
 	go func() {
 		defer close(units)
-		startDate := crawlRun.configuration.FromDate
-		endDate := crawlRun.configuration.ToDate
+		startDate := crawlRun.FromDate
+		endDate := crawlRun.ToDate
 
-		size := int(startDate.Sub(endDate).Hours()/24) + 1
+		size := int(endDate.Sub(startDate).Hours()/24) + 1
 		counter := 0
 
 		for d := startDate; d.Before(endDate.AddDate(0, 0, 1)); d = d.AddDate(0, 0, 1) {
-			fmt.Println(counter / size)
+			counter = counter + 1
+			fmt.Printf("\rProcessing day %v (%v/%v - %3.1f %%)", d.Format("2006-01-02"), counter, size, float32(counter)/float32(size)*100.0)
 
 			t1 := d.Format("2006-01-02 15:04:05.000")
 			t2 := d.AddDate(0, 0, 1).Add(-1 * time.Millisecond).Format("2006-01-02 15:04:05.000")
 
 			offset := 0
 			for {
-				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", crawlRun.configuration.URL, url.QueryEscape(t1), url.QueryEscape(t2), offset)
-				response_body, err := crawlRun.httpClient.Get(url)
+				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", crawlRun.URL, url.QueryEscape(t1), url.QueryEscape(t2), offset)
+				response_body, err := crawlRun.HTTPClient.Get(url)
 				if err != nil {
 					panic(err)
 				}
@@ -54,8 +40,11 @@ func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 
 				for _, response := range jsonResponse {
 					id := fmt.Sprintf("%v", response["_number"])
-					url := fmt.Sprintf("%s/changes/%s/detail/?o=ALL_REVISIONS&o=ALL_COMMITS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", crawlRun.configuration.URL, id)
-					units <- NewUnit(id, url)
+					url := fmt.Sprintf("%s/changes/%s/detail/?o=ALL_REVISIONS&o=ALL_COMMITS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", crawlRun.URL, id)
+					units <- collect.Unit{
+						ID: id, 
+						URL: url,
+					}
 				}
 				l := len(jsonResponse)
 				last := jsonResponse[l-1]
@@ -66,12 +55,13 @@ func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 				}
 			}
 		}
+		fmt.Println("") // nice finish :)
 	}()
 	return units
 }
 
-func PostProcess(in <-chan Unit, crawlRun collect.CrawlRun) <-chan Unit {
-	units := make(chan Unit)
+func PostProcess(in <-chan collect.Unit, crawlRun collect.CrawlRun) <-chan collect.Unit {
+	units := make(chan collect.Unit)
 	go func() {
 		defer close(units)
 		for unit := range in {

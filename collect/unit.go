@@ -5,10 +5,3 @@ type Unit struct {
 	URL     string
 	Payload []byte
 }
-
-func NewUnit(id, url string) Unit {
-	return Unit{
-		ID:  id,
-		URL: url,
-	}
-}

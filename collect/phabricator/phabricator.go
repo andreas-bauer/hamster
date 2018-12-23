@@ -5,15 +5,15 @@ import (
 	"github.com/michaeldorner/hamster/collect"
 )
 
-func Generate(crawlRun collect.CrawlRun) <-chan Unit {
-	units := make(chan Unit)
+func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
+	units := make(chan collect.Unit)
 	defer close(units)
 	fmt.Println("Phabricator is not supported yet")
 	return units
 }
 
-func PostProcessPhabricatorUnits(<-chan Unit) <-chan Unit {
-	units := make(chan Unit)
+func PostProcess(in <-chan collect.Unit, crawlRun collect.CrawlRun) <-chan collect.Unit {
+	units := make(chan collect.Unit)
 	defer close(units)
 	return units
 }
