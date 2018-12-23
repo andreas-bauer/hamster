@@ -4,7 +4,7 @@ go:
   - "1.10"
 
 before_install:
-  - go get -t -v  ./...
+  - go get -u github.com/michaeldorner/hamster/...
 
 script:
   - go test -coverprofile=coverage.txt -covermode=atomic
