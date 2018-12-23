@@ -3,17 +3,18 @@ package gerrit
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/michaeldorner/hamster/collect"
 	"net/url"
 	"time"
+
+	"github.com/michaeldorner/hamster/collect"
 )
 
 func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 	units := make(chan collect.Unit)
 	go func() {
 		defer close(units)
-		startDate := crawlRun.FromDate
-		endDate := crawlRun.ToDate
+		startDate := crawlRun.Config.FromDate
+		endDate := crawlRun.Config.ToDate
 
 		size := int(endDate.Sub(startDate).Hours()/24) + 1
 		counter := 0
@@ -27,7 +28,7 @@ func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 
 			offset := 0
 			for {
-				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", crawlRun.URL, url.QueryEscape(t1), url.QueryEscape(t2), offset)
+				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", crawlRun.Config.URL, url.QueryEscape(t1), url.QueryEscape(t2), offset)
 				response_body, err := crawlRun.HTTPClient.Get(url)
 				if err != nil {
 					panic(err)
@@ -40,7 +41,7 @@ func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 
 				for _, response := range jsonResponse {
 					id := fmt.Sprintf("%v", response["_number"])
-					url := fmt.Sprintf("%s/changes/%s/detail/?o=ALL_REVISIONS&o=ALL_COMMITS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", crawlRun.URL, id)
+					url := fmt.Sprintf("%s/changes/%s/detail/?o=ALL_REVISIONS&o=ALL_COMMITS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", crawlRun.Config.URL, id)
 					units <- collect.Unit{
 						ID: id, 
 						URL: url,

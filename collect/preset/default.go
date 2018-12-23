@@ -9,7 +9,7 @@ func Filter(in <-chan collect.Unit, crawlRun collect.CrawlRun) <-chan collect.Un
 	go func() {
 		defer close(out)
 		for unit := range in {
-			if crawlRun.SkipExistingFiles != crawlRun.Persistence.UnitFileExists(unit.ID) {
+			if crawlRun.Config.SkipExistingFiles != crawlRun.Persistence.UnitFileExists(unit.ID) {
 				out <- unit
 			}
 		}

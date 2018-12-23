@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type CrawlRun struct {
+type CrawlRunConfiguration struct {
 	ID                string    `json:"id"`
 	URL               string    `json:"url"` // remove trailing "/"
 	FromDate          time.Time `json:"fromDate"`
@@ -16,39 +16,52 @@ type CrawlRun struct {
 	Retries           int       `json:"retries"`
 	Timeout           int       `json:"timeout"`
 	SkipExistingFiles bool      `json:"skipExistingFiles"`
-	HTTPClient        RetryHTTPClient
-	Persistence       store.Persistence
+	//HTTPClient        RetryHTTPClient
+	//Persistence       store.Persistence
 }
 
-var standardPersistence store.Persistence = store.NewPersistence("/Users/michaeldorner/Desktop/Gerry/", "TESTID")
+var standardPersistence store.Persistence = store.NewPersistence("/TEST/", "TESTID")
 var standardHTTPClient = NewRetryHTTPClient(60, 2, standardPersistence.LogFile())
 
-var TestCrawlRun CrawlRun = CrawlRun{
+var TestCrawlRun CrawlRunConfiguration = CrawlRunConfiguration{
 	ID:                "TESTID",
 	URL:               "https://review.openstack.org",
 	FromDate:          time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC),
 	ToDate:            time.Date(2016, 1, 2, 0, 0, 0, 0, time.UTC),
-	OutDir:            "./Users/michaeldorner/Desktop/Gerry/",
+	OutDir:            "/TEST/",
 	Retries:           10,
 	Timeout:           60,
 	SkipExistingFiles: true,
-	HTTPClient:        standardHTTPClient,
-	Persistence:       standardPersistence,
+	//HTTPClient:        RetryHTTPClient,
+	//Persistence:       store.Persistence,
 }
+
+type CrawlRun struct {
+	Config CrawlRunConfiguration
+	HTTPClient        RetryHTTPClient
+	Persistence       store.Persistence
+}
+
+func NewCrawlRun(configuration CrawlRunConfiguration) CrawlRun {
+	var crawlRun CrawlRun
+	crawlRun.Config = configuration
+	crawlRun.Persistence = store.NewPersistence(crawlRun.Config.OutDir, crawlRun.Config.ID)
+	crawlRun.HTTPClient = NewRetryHTTPClient(crawlRun.Config.Timeout, crawlRun.Config.Retries, crawlRun.Persistence.LogFile())
+	return crawlRun
+}
+
 
 func LoadCrawlRunFile(configurationFilePath string) CrawlRun {
 	jsonData, err := ioutil.ReadFile(configurationFilePath)
 	if err != nil {
 		panic(err)
 	}
-	var crawlRun CrawlRun
-	if err := json.Unmarshal(jsonData, &crawlRun); err != nil {
+	var configuration CrawlRunConfiguration
+	if err := json.Unmarshal(jsonData, &configuration); err != nil {
 		panic(err)
 	}
-	crawlRun.Persistence = store.NewPersistence(crawlRun.OutDir, crawlRun.ID)
-	crawlRun.HTTPClient = NewRetryHTTPClient(crawlRun.Timeout, crawlRun.Retries, crawlRun.Persistence.LogFile())
-
-	return crawlRun
+	
+	return NewCrawlRun(configuration)
 }
 
 func (crawlRun CrawlRun) StoreConfiguration() error {
