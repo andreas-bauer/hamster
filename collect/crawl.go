@@ -20,10 +20,7 @@ type CrawlRunConfiguration struct {
 	//Persistence       store.Persistence
 }
 
-var standardPersistence store.Persistence = store.NewPersistence("/TEST/", "TESTID")
-var standardHTTPClient = NewRetryHTTPClient(60, 2, standardPersistence.LogFile())
-
-var TestCrawlRun CrawlRunConfiguration = CrawlRunConfiguration{
+var testCrawlRunConfiguration CrawlRunConfiguration = CrawlRunConfiguration{
 	ID:                "TESTID",
 	URL:               "https://review.openstack.org",
 	FromDate:          time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -32,9 +29,9 @@ var TestCrawlRun CrawlRunConfiguration = CrawlRunConfiguration{
 	Retries:           10,
 	Timeout:           60,
 	SkipExistingFiles: true,
-	//HTTPClient:        RetryHTTPClient,
-	//Persistence:       store.Persistence,
 }
+
+var TestCrawlRun CrawlRun = NewCrawlRun(testCrawlRunConfiguration)
 
 type CrawlRun struct {
 	Config CrawlRunConfiguration
