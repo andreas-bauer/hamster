@@ -1,4 +1,4 @@
-package collect
+package crawl
 
 type Unit struct {
 	ID      string

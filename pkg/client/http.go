@@ -1,4 +1,4 @@
-package collect
+package client
 
 import (
 	"errors"
@@ -12,23 +12,23 @@ import (
 
 var ErrMaxRetries = errors.New("error reached max retries")
 
-type RetryHTTPClient struct {
+type HamsterClient struct {
 	hc         http.Client
-	MaxRetries int
-	Log        *log.Logger
+	maxRetries int
+	log        *log.Logger
 }
 
-func NewRetryHTTPClient(timeOut, maxRetries int, logFile *os.File) RetryHTTPClient {
-	return RetryHTTPClient{
+func New(timeOut, maxRetries int, logFile *os.File) HamsterClient {
+	return HamsterClient{
 		hc: http.Client{
 			Timeout: time.Duration(timeOut) * time.Second,
 		},
-		MaxRetries: maxRetries,
-		Log:        log.New(logFile, "", 0),
+		maxRetries: maxRetries,
+		log:        log.New(logFile, "", 0),
 	}
 }
 
-func (client RetryHTTPClient) Get(url string) ([]byte, error) {
+func (client HamsterClient) Get(url string) ([]byte, error) {
 	retry := 0
 	for {
 		wait := retry * retry
@@ -38,10 +38,10 @@ func (client RetryHTTPClient) Get(url string) ([]byte, error) {
 			defer response.Body.Close()
 
 			if response.StatusCode == http.StatusOK && response.Body != nil {
-				client.Log.Println("DOWNLOADED", url)
+				client.log.Println("DOWNLOADED", url)
 				return ioutil.ReadAll(response.Body)
 			} else {
-				client.Log.Println("RETRY", retry, url)
+				client.log.Println("RETRY", retry, url)
 
 				header := response.Header.Get("Retry-After")
 				if len(header) > 0 {
@@ -53,11 +53,11 @@ func (client RetryHTTPClient) Get(url string) ([]byte, error) {
 			}
 		}
 
-		if retry <= client.MaxRetries {
+		if retry <= client.maxRetries {
 			time.Sleep(time.Duration(wait) * time.Second)
 			retry = retry + 1
 		} else {
-			client.Log.Println("FAILED", retry, url)
+			client.log.Println("FAILED", retry, url)
 			return nil, ErrMaxRetries
 		}
 	}

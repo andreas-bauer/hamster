@@ -11,13 +11,13 @@ func main() {
 	pathPtr := flag.String("path", "./", "path to config file")
 	flag.Parse()
 
-	crawlRun := collect.LoadCrawlRunFile(*pathPtr)
+	crawlTask := collect.LoadTaskFile(*pathPtr)
 
-	channel_1 := phabricator.Generate(crawlRun)
-	channel_2 := preset.Filter(channel_1, crawlRun)
-	channel_3 := preset.GetPayload(channel_2, crawlRun)
-	channel_4 := phabricator.PostProcess(channel_3, crawlRun)
-	preset.Store(channel_4, crawlRun)
+	channel_1 := phabricator.Generate(crawlTask)
+	channel_2 := preset.Filter(channel_1, crawlTask)
+	channel_3 := preset.GetPayload(channel_2, crawlTask)
+	channel_4 := phabricator.PostProcess(channel_3, crawlTask)
+	preset.Repository(channel_4, crawlTask)
 
 }
 

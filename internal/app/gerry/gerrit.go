@@ -6,15 +6,17 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/michaeldorner/hamster/collect"
+	"github.com/michaeldorner/hamster/pkg/crawl"
+	"github.com/michaeldorner/hamster/pkg/client"
+	"github.com/michaeldorner/hamster/pkg/store"
 )
 
-func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
-	units := make(chan collect.Unit)
+var Feed crawl.Feed = func (options crawl.Options, client client.HamsterClient, repository store.Repository) <-chan crawl.Unit {
+	units := make(chan crawl.Unit)
 	go func() {
 		defer close(units)
-		startDate := crawlRun.Config.FromDate
-		endDate := crawlRun.Config.ToDate
+		startDate := options.FromDate
+		endDate := options.ToDate
 
 		size := int(endDate.Sub(startDate).Hours()/24) + 1
 		counter := 0
@@ -28,8 +30,8 @@ func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 
 			offset := 0
 			for {
-				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", crawlRun.Config.URL, url.QueryEscape(t1), url.QueryEscape(t2), offset)
-				response_body, err := crawlRun.HTTPClient.Get(url)
+				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", options.URL, url.QueryEscape(t1), url.QueryEscape(t2), offset)
+				response_body, err := client.Get(url)
 				if err != nil {
 					panic(err)
 				}
@@ -41,9 +43,9 @@ func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 
 				for _, response := range jsonResponse {
 					id := fmt.Sprintf("%v", response["_number"])
-					url := fmt.Sprintf("%s/changes/%s/detail/?o=ALL_REVISIONS&o=ALL_COMMITS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", crawlRun.Config.URL, id)
-					units <- collect.Unit{
-						ID: id, 
+					url := fmt.Sprintf("%s/changes/%s/detail/?o=ALL_REVISIONS&o=ALL_COMMITS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", options.URL, id)
+					units <- crawl.Unit{
+						ID:  id,
 						URL: url,
 					}
 				}
@@ -61,8 +63,8 @@ func Generate(crawlRun collect.CrawlRun) <-chan collect.Unit {
 	return units
 }
 
-func PostProcess(in <-chan collect.Unit, crawlRun collect.CrawlRun) <-chan collect.Unit {
-	units := make(chan collect.Unit)
+var PostProcess crawl.PostProcess = func (options crawl.Options, client client.HamsterClient, in <-chan crawl.Unit) <-chan crawl.Unit {
+	units := make(chan crawl.Unit)
 	go func() {
 		defer close(units)
 		for unit := range in {
@@ -72,3 +74,4 @@ func PostProcess(in <-chan collect.Unit, crawlRun collect.CrawlRun) <-chan colle
 	}()
 	return units
 }
+
