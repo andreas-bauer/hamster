@@ -4,33 +4,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/michaeldorner/hamster/pkg/crawl"
-	"github.com/michaeldorner/hamster/pkg/client"
+	"github.com/michaeldorner/hamster/pkg/http"
 	"github.com/michaeldorner/hamster/pkg/store"
+	"github.com/schollz/progressbar"
 )
 
-var Feed crawl.Feed = func (options crawl.Options, client client.HamsterClient, repository store.Repository) <-chan crawl.Unit {
+var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository store.Repository) <-chan crawl.Unit {
 	units := make(chan crawl.Unit)
 	go func() {
 		defer close(units)
-		startDate := options.FromDate
-		endDate := options.ToDate
 
-		size := int(endDate.Sub(startDate).Hours()/24) + 1
-		counter := 0
+		crawlRange := crawl.GenerateCrawlRange(options.FromDate, options.ToDate)
 
-		for d := startDate; !d.After(endDate); d = d.AddDate(0, 0, 1) {
-			counter = counter + 1
-			fmt.Printf("\rProcessing day %v (%v/%v - %3.1f %%)", d.Format("2006-01-02"), counter, size, float32(counter)/float32(size)*100.0)
+		size := len(crawlRange)
+		bar := progressbar.NewOptions(size, progressbar.OptionSetRenderBlankState(true), progressbar.OptionShowIts(), progressbar.OptionShowCount(), progressbar.OptionSetWidth(100))
+		bar.RenderBlank()
 
-			t1 := d.Format("2006-01-02 15:04:05.000")
-			t2 := d.AddDate(0, 0, 1).Add(-1 * time.Millisecond).Format("2006-01-02 15:04:05.000")
+		for _, d := range crawlRange {
 
 			offset := 0
 			for {
-				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", options.URL, url.QueryEscape(t1), url.QueryEscape(t2), offset)
+				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", options.URL, url.QueryEscape(d.Min()), url.QueryEscape(d.Max()), offset)
 				response_body, err := client.Get(url)
 				if err != nil {
 					panic(err)
@@ -41,6 +37,8 @@ var Feed crawl.Feed = func (options crawl.Options, client client.HamsterClient, 
 					panic(err)
 				}
 
+				more := false
+
 				for _, response := range jsonResponse {
 					id := fmt.Sprintf("%v", response["_number"])
 					url := fmt.Sprintf("%s/changes/%s/detail/?o=ALL_REVISIONS&o=ALL_COMMITS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", options.URL, id)
@@ -48,22 +46,24 @@ var Feed crawl.Feed = func (options crawl.Options, client client.HamsterClient, 
 						ID:  id,
 						URL: url,
 					}
+					_, exists := response["_more_changes"]
+					more = more || exists
 				}
-				l := len(jsonResponse)
-				last := jsonResponse[l-1]
-				if _, ok := last["_more_changes"]; ok {
-					offset = offset + l
+
+				if more {
+					offset = offset + len(jsonResponse)
 				} else {
 					break
 				}
 			}
+			bar.Add(1)
 		}
 		fmt.Println("") // nice finish :)
 	}()
 	return units
 }
 
-var PostProcess crawl.PostProcess = func (options crawl.Options, client client.HamsterClient, in <-chan crawl.Unit) <-chan crawl.Unit {
+var PostProcess crawl.PostProcess = func(options crawl.Options, client http.Client, in <-chan crawl.Unit) <-chan crawl.Unit {
 	units := make(chan crawl.Unit)
 	go func() {
 		defer close(units)
@@ -74,4 +74,3 @@ var PostProcess crawl.PostProcess = func (options crawl.Options, client client.H
 	}()
 	return units
 }
-

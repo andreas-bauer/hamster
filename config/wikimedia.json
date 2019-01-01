@@ -1,0 +1,10 @@
+{
+    "id":"MSR2019",
+    "url":"https://gerrit.wikimedia.org/r",
+    "fromDate":"2011-09-01",
+    "toDate":"2018-12-31",
+    "OutDir":"./wikimedia/",
+    "maxRetryAttempts":10,
+    "timeout":120,
+    "skipExistingFiles":false
+}

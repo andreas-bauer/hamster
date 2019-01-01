@@ -1,0 +1,10 @@
+{
+    "id":"MSR2019",
+    "url":"https://chromium-review.googlesource.com",
+    "fromDate":"2011-04-01",
+    "toDate":"2018-12-31",
+    "OutDir":"./chromium/",
+    "maxRetryAttempts":10,
+    "timeout":120,
+    "skipExistingFiles":false
+}

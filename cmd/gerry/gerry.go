@@ -1,14 +1,15 @@
 package main
 
 import (
-	//"flag"
-
+	"flag"
 	"github.com/michaeldorner/hamster/internal/app/gerry"
 	"github.com/michaeldorner/hamster/pkg/crawl"
 )
 
-
 func main() {
-	options := crawl.TestOptions
-	crawl.Run(options, gerrit.Feed, gerrit.PostProcess) 
+	configFile := flag.String("configFile", "", "`path` to the JSON configuration file")
+	flag.Parse()
+
+	options := crawl.LoadOptionsFromJSONFile(*configFile)
+	crawl.Run(options, gerrit.Feed, gerrit.PostProcess)
 }

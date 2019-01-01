@@ -1,17 +1,16 @@
 package crawl
 
 import (
-	"github.com/michaeldorner/hamster/pkg/client"
+	"github.com/michaeldorner/hamster/pkg/http"
 	"github.com/michaeldorner/hamster/pkg/store"
 )
 
-type Feed func(Options, client.HamsterClient, store.Repository) <-chan Unit
-type PostProcess func(Options, client.HamsterClient, <-chan Unit) <-chan Unit
-
+type Feed func(Options, http.Client, store.Repository) <-chan Unit
+type PostProcess func(Options, http.Client, <-chan Unit) <-chan Unit
 
 func Run(options Options, feed Feed, postProcess PostProcess) {
-	repository := store.NewRepository(options.OutDir, options.ID)
-	client := client.New(options.Timeout, options.Retries, repository.LogFile())
+	repository := store.NewRepository(options.OutDir)
+	client := http.NewClient(options.Timeout, options.MaxRetryAttempts, repository.LogFile())
 
 	storeOptions(options, repository)
 	afterFeed := feed(options, client, repository)
@@ -20,7 +19,6 @@ func Run(options Options, feed Feed, postProcess PostProcess) {
 	afterPostProcess := postProcess(options, client, afterPayload)
 	persist(repository, afterPostProcess)
 }
-
 
 func storeOptions(options Options, repository store.Repository) {
 	jsonData := options.JSON()
@@ -44,7 +42,7 @@ func filter(options Options, repository store.Repository, in <-chan Unit) <-chan
 	return out
 }
 
-func getPayload(client client.HamsterClient, in <-chan Unit) <-chan Unit {
+func getPayload(client http.Client, in <-chan Unit) <-chan Unit {
 	out := make(chan Unit)
 	go func() {
 		defer close(out)
@@ -60,7 +58,6 @@ func getPayload(client client.HamsterClient, in <-chan Unit) <-chan Unit {
 	}()
 	return out
 }
-
 
 func persist(repository store.Repository, in <-chan Unit) {
 	for unit := range in {
