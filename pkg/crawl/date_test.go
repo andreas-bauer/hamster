@@ -1,71 +1,93 @@
 package crawl
 
-import "testing"
-import "fmt"
+import (
+	"encoding/json"
+	"testing"
+	"time"
+)
 
-func TestGenerateCrawlRange(t *testing.T) {
-	d1 := NewDate(2018, 1, 1)
-	d2 := NewDate(2018, 1, 31)
-
-	l := len(GenerateCrawlRange(d1, d2))
-	if l != 31 {
-		t.Error("Expected 31, got ", l)
+func parseTimestamp(value string, t *testing.T) Timestamp {
+	ts, err := ParseTimestamp(value)
+	if err != nil {
+		t.Error("ParseTimestamp() failed with input", value)
 	}
-
-	l = len(GenerateCrawlRange(d1, d1))
-	if l != 1 {
-		t.Error("Expected 1, got ", l)
-	}
+	return ts
 }
 
-func TestCountDaysInCrawlRange(t *testing.T) {
-	d1 := NewDate(2018, 1, 1)
-	d2 := NewDate(2018, 1, 31)
-
-	c := CountDaysInCrawlRange(d1, d2)
-	if c != 31 {
-		t.Error("Expected 31, got ", c)
+func parseDuration(value string, t *testing.T) Duration {
+	duration, err := ParseDuration(value)
+	if err != nil {
+		t.Error("ParseTimestamp() failed with input", value)
 	}
+	return duration
+}
 
-	c = CountDaysInCrawlRange(d1, d1)
-	if c != 1 {
-		t.Error("Expected 1, got ", c)
+func TestParseTimestamp(t *testing.T) {
+	timestamp := parseTimestamp("2018-01-01 00:00:00.000", t)
+	reference := time.Date(2018, time.January, 1, 0, 0, 0, 0, time.UTC)
+
+	if !timestamp.Time.Equal(reference) {
+		t.Errorf("Expected %v, got %v\n", reference, timestamp.Time)
 	}
 }
 
-func TestMin(t *testing.T) {
-	d := NewDate(2018, 1, 1)
-	fs := d.Min()
-	if fs != "2018-01-01 00:00:00.000" {
-		t.Error("Expected '2018-01-01 00:00:00.000', got ", fs)
+func TestParseDuration(t *testing.T) {
+	duration := parseDuration("24h", t)
+	reference := 24 * time.Hour
+
+	if duration.Duration != reference {
+		t.Errorf("Expected %v, got %v\n", reference, duration.Duration)
 	}
 }
 
-func TestLastTime(t *testing.T) {
-	d := NewDate(2018, 1, 1)
-	fs := d.Max()
-	if fs != "2018-01-01 23:59:59.999" {
-		t.Error("Expected '2018-01-01 23:59:59.999', got ", fs)
+func TestPeriod(t *testing.T) {
+	var rangeJSONData = `
+	{
+		"from":"2018-01-01 00:00:00.000", 
+		"to":"2018-02-01 00:00:00.000",
+		"stepSize":"24h"
+	}`
+	rd := Period{}
+	err := json.Unmarshal([]byte(rangeJSONData), &rd)
+
+	fromTimestamp, err := ParseTimestamp("2018-01-01 00:00:00.000")
+	toTimestamp, err := ParseTimestamp("2018-02-01 00:00:00.000")
+
+	if err != nil || !fromTimestamp.Time.Equal(rd.From.Time) || !toTimestamp.Time.Equal(rd.To.Time) {
+		t.Error("Expected equal times")
 	}
 }
 
-func TestMarshalJSON(t *testing.T) {
-	d := NewDate(2018, 1, 1)
-	fmt.Println(d.MarshalJSON())
+func TestGenerateTimeFrames(t *testing.T) {
+	ts20180101 := parseTimestamp("2018-01-01 00:00:00.000", t)
+	ts20180103 := parseTimestamp("2018-01-03 00:00:00.000", t)
+	ts20181231 := parseTimestamp("2018-12-31 23:59:59.999", t)
+
+	duration1d := parseDuration("24h", t)
+	duration1h := parseDuration("1h", t)
+
+	var testGenerateTimeFrames = func(from, to Timestamp, stepSize Duration, expected int) {
+		period := Period{
+			TimeFrame: TimeFrame{from, to},
+			StepSize:  stepSize,
+		}
+
+		l := len(GenerateTimeFrames(period))
+
+		if l != expected {
+			t.Errorf("Expected %v, got %v\n", expected, l)
+		}
+	}
+
+	testGenerateTimeFrames(ts20180101, ts20180103, duration1d, 2)
+	testGenerateTimeFrames(ts20180101, ts20180103, duration1h, 48)
+	testGenerateTimeFrames(ts20180101, ts20181231, duration1d, 365)
 }
 
-func TestUnmarshalJSON(t *testing.T) {
-	date := Date{}
-	date.UnmarshalJSON([]byte("\"2018-01-01\""))
-	fmt.Print(date)
-}
-/*
-func (date Date) MarshalJSON() ([]byte, error) {
-	return []byte(date.time.Format(parseJSONDate)), nil
-}
+func TestTimestampToString(t *testing.T) {
+	ts := parseTimestamp("2018-01-01 00:00:00.000", t)
+	if ts.String() != "2018-01-01 00:00:00.000" {
+		t.Error("Expected '2018-01-01 00:00:00.000', got", ts.String())
+	}
 
-func (date *Date) UnmarshalJSON(data []byte) (err error) {
-	time, err := time.Parse(formatStringDate, string(data))
-	*date = Date{time}
-	return err
-}*/
+}

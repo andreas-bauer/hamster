@@ -16,17 +16,18 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 	go func() {
 		defer close(units)
 
-		crawlRange := crawl.GenerateCrawlRange(options.FromDate, options.ToDate)
+		timeframes := crawl.GenerateTimeFrames(options.Period)
 
-		size := len(crawlRange)
+		size := len(timeframes)
 		bar := progressbar.NewOptions(size, progressbar.OptionSetRenderBlankState(true), progressbar.OptionShowIts(), progressbar.OptionShowCount(), progressbar.OptionSetWidth(100))
 		bar.RenderBlank()
 
-		for _, d := range crawlRange {
-
+		for _, timeframe := range timeframes {
 			offset := 0
 			for {
-				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", options.URL, url.QueryEscape(d.Min()), url.QueryEscape(d.Max()), offset)
+				from := url.QueryEscape(timeframe.From.String())
+				to := url.QueryEscape(timeframe.To.String())
+				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", options.URL, from, to, offset)
 				response_body, err := client.Get(url)
 				if err != nil {
 					panic(err)

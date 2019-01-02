@@ -34,7 +34,7 @@ func filter(options Options, repository store.Repository, in <-chan Unit) <-chan
 	go func() {
 		defer close(out)
 		for unit := range in {
-			if options.SkipExistingFiles != repository.UnitFileExists(unit.ID) {
+			if !(options.SkipExistingFiles && repository.UnitFileExists(unit.ID)) {
 				out <- unit
 			}
 		}

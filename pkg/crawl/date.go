@@ -1,47 +1,93 @@
 package crawl
 
 import (
+	"encoding/json"
+	"errors"
 	"time"
 )
 
-const formatStringDate = "2006-01-02"
-const parseJSONDate = "\"2006-01-02\""
-
-type Date struct {
-	time time.Time
+type Timestamp struct {
+	time.Time
 }
 
-func NewDate(year, month, day int) Date {
-	t := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-	return Date{t}
+type TimeFrame struct {
+	From Timestamp `json:"from"`
+	To   Timestamp `json:"to"`
 }
 
-func GenerateCrawlRange(start, end Date) []Date {
-	res := make([]Date, 0)
-	for t := start.time; !t.After(end.time); t = t.AddDate(0, 0, 1) {
-		res = append(res, Date{t})
+type Period struct {
+	TimeFrame
+	StepSize Duration `json:"stepSize"`
+}
+
+type Duration struct {
+	time.Duration
+}
+
+func GenerateTimeFrames(period Period) []TimeFrame {
+	res := make([]TimeFrame, 0)
+
+	for t := period.From.Time; t.Before(period.To.Time); t = t.Add(period.StepSize.Duration) {
+		r := TimeFrame{}
+		r.From.Time = t
+		r.To.Time = t.Add(period.StepSize.Duration).Add(-1 * time.Millisecond)
+		res = append(res, r)
 	}
 	return res
 }
 
-func (date Date) MarshalJSON() ([]byte, error) {
-	return []byte(date.time.Format(parseJSONDate)), nil
+func ParseDuration(value string) (Duration, error) {
+	t, err := time.ParseDuration(value)
+	return Duration{t}, err
 }
 
-func (date *Date) UnmarshalJSON(data []byte) (err error) {
-	time, err := time.Parse(formatStringDate, string(data))
-	*date = Date{time}
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.String())
+}
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		d.Duration = time.Duration(value)
+		return nil
+	case string:
+		var err error
+		d.Duration, err = time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errors.New("invalid duration")
+	}
+}
+
+const stringLayout = "2006-01-02 15:04:05.000"
+const jsonLayout = "\"2006-01-02 15:04:05.000\""
+
+func ParseTimestamp(value string) (Timestamp, error) {
+	t, err := time.Parse(stringLayout, value)
+	return Timestamp{t}, err
+}
+
+func (ts Timestamp) MarshalJSON() ([]byte, error) {
+	return []byte(ts.Time.Format(jsonLayout)), nil
+}
+
+func (ts *Timestamp) UnmarshalJSON(data []byte) (err error) {
+	time, err := time.Parse(jsonLayout, string(data))
+	ts.Time = time
 	return err
 }
 
-func CountDaysInCrawlRange(start, end Date) int {
-	return int(end.time.Sub(start.time).Hours()/24) + 1
+func (ts *Timestamp) String() string {
+	return ts.Time.Format(stringLayout)
 }
 
-func (date Date) Min() string {
-	return date.time.Format("2006-01-02 15:04:05.000")
-}
-
-func (date Date) Max() string {
-	return date.time.AddDate(0, 0, 1).Add(-1 * time.Millisecond).Format("2006-01-02 15:04:05.000")
+func (ts Timestamp) LastTimestampForStepSize(duration Duration) Timestamp {
+	return Timestamp{ts.Time.Add(duration.Duration).Add(-1 * time.Millisecond)}
 }

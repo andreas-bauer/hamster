@@ -1,8 +1,8 @@
 {
     "id":"MSR2019",
     "url":"https://gerrit.libreoffice.org",
-    "fromDate":"2012-03-01",
-    "toDate":"2018-12-31",
+    "fromTimestamp":"2012-03-01",
+    "toTimestamp":"2018-12-31",
     "OutDir":"./libreoffice/",
     "maxRetryAttempts":10,
     "timeout":120,

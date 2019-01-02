@@ -1,8 +1,8 @@
 {
     "id":"MSR2019",
     "url":"https://go-review.googlesource.com",
-    "fromDate":"2014-11-01",
-    "toDate":"2018-12-31",
+    "fromTimestamp":"2014-11-01",
+    "toTimestamp":"2018-12-31",
     "OutDir":"./golang/",
     "maxRetryAttempts":10,
     "timeout":120,

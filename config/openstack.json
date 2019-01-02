@@ -1,8 +1,8 @@
 {
     "id":"MSR2019",
     "url":"https://review.openstack.org",
-    "fromDate":"2011-07-01",
-    "toDate":"2018-12-31",
+    "fromTimestamp":"2011-07-01",
+    "toTimestamp":"2018-12-31",
     "OutDir":"./openstack/",
     "maxRetryAttempts":10,
     "timeout":120,

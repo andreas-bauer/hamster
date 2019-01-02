@@ -6,13 +6,12 @@ import (
 )
 
 type Options struct {
-	URL               string    `json:"url"` // remove trailing "/"
-	FromDate          Date `json:"fromDate"`
-	ToDate            Date `json:"toDate"`
-	OutDir            string    `json:"outDir"`
-	MaxRetryAttempts  int       `json:"maxRetryAttempts"`
-	Timeout           int       `json:"timeout"`
-	SkipExistingFiles bool      `json:"skipExistingFiles"`
+	URL               string `json:"url"`
+	Period             Period `json:"period"`
+	OutDir            string `json:"outDir"`
+	MaxRetryAttempts  int    `json:"maxRetryAttempts"`
+	Timeout           int    `json:"timeout"`
+	SkipExistingFiles bool   `json:"skipExistingFiles"`
 }
 
 func (options Options) JSON() []byte {

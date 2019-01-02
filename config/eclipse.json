@@ -1,8 +1,8 @@
 {
     "id":"MSR2019",
     "url":"https://git.eclipse.org/r",
-    "fromDate":"2009-10-01",
-    "toDate":"2018-12-31",
+    "fromTimestamp":"2009-10-01",
+    "toTimestamp":"2018-12-31",
     "OutDir":"./libreoffice/",
     "maxRetryAttempts":10,
     "timeout":120,

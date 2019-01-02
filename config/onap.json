@@ -1,8 +1,8 @@
 {
     "id":"MSR2019",
     "url":"https://gerrit.onap.org/r",
-    "fromDate":"2017-01-01",
-    "toDate":"2018-12-31",
+    "fromTimestamp":"2017-01-01",
+    "toTimestamp":"2018-12-31",
     "OutDir":"./onap/",
     "maxRetryAttempts":10,
     "timeout":120,
