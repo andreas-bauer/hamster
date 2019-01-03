@@ -39,10 +39,12 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 				}
 
 				more := false
-
 				for _, response := range jsonResponse {
 					id := fmt.Sprintf("%v", response["_number"])
-					url := fmt.Sprintf("%s/changes/%s/detail/?o=CURRENT_REVISION&o=ALL_REVISIONS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", options.URL, id)
+					defaultOptions := "o=CHECK&o=DOWNLOAD_COMMANDS&o=ALL_COMMITS&o=ALL_REVISIONS&o=ALL_FILES&o=WEB_LINKS&o=COMMIT_FOOTERS"
+					//detailsOptions := "o=LABELS&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=REVIEWER_UPDATES&o=MESSAGES"
+					url := fmt.Sprintf("%s/changes/%s/detail/?%s", options.URL, id, defaultOptions)
+					//url := fmt.Sprintf("%s/changes/?q=%s&%s&%s", options.URL, id, defaultOptions, detailsOptions)
 					units <- crawl.Unit{
 						ID:  id,
 						URL: url,

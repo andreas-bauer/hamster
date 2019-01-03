@@ -1,10 +1,12 @@
 {
-    "id":"MSR2019",
     "url":"https://git.eclipse.org/r",
-    "fromTimestamp":"2009-10-01",
-    "toTimestamp":"2018-12-31",
-    "OutDir":"./libreoffice/",
-    "maxRetryAttempts":10,
+    "period": {
+        "from": "2009-10-01 00:00:00.000", 
+        "to":"2019-01-01 00:00:00.000",
+        "stepSize": "24h"
+    },
+    "OutDir":"./eclipse/",
+    "maxRetryAttempts":5,
     "timeout":120,
     "skipExistingFiles":false
 }
