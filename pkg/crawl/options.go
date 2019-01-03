@@ -5,12 +5,17 @@ import (
 	"io/ioutil"
 )
 
+const (
+	DefaultTimeout          uint = 120
+	DefaultMaxRetryAttempts uint = 5
+)
+
 type Options struct {
 	URL               string `json:"url"`
-	Period             Period `json:"period"`
+	Period            Period `json:"period"`
 	OutDir            string `json:"outDir"`
-	MaxRetryAttempts  int    `json:"maxRetryAttempts"`
-	Timeout           int    `json:"timeout"`
+	MaxRetryAttempts  uint   `json:"maxRetryAttempts"`
+	Timeout           uint   `json:"timeout"`
 	SkipExistingFiles bool   `json:"skipExistingFiles"`
 }
 

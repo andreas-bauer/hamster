@@ -42,7 +42,7 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 
 				for _, response := range jsonResponse {
 					id := fmt.Sprintf("%v", response["_number"])
-					url := fmt.Sprintf("%s/changes/%s/detail/?o=ALL_REVISIONS&o=ALL_COMMITS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", options.URL, id)
+					url := fmt.Sprintf("%s/changes/%s/detail/?o=CURRENT_REVISION&o=ALL_REVISIONS&o=ALL_FILES&o=REVIEWED&o=WEB_LINKS&o=COMMIT_FOOTERS", options.URL, id)
 					units <- crawl.Unit{
 						ID:  id,
 						URL: url,

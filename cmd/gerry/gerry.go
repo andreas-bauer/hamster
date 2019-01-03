@@ -8,11 +8,22 @@ import (
 )
 
 func main() {
-	configFile := flag.String("configFile", "", "`path` to the JSON configuration file")
+	configFile := flag.Arg(0)
 	flag.Parse()
 
-	fmt.Println("Loading ", *configFile)
+	if flag.NFlag() != 1 {
+		panic("no configuration file ")
+	}
+	fmt.Println("Loading ", configFile)
 
-	options := crawl.LoadOptionsFromJSONFile(*configFile)
+	options := crawl.LoadOptionsFromJSONFile(configFile)
+
+	if options.MaxRetryAttempts == 0 {
+		options.MaxRetryAttempts = 5
+	}
+	if options.Timeout == 0 {
+		options.Timeout == 120
+	}
+
 	crawl.Run(options, gerrit.Feed, gerrit.PostProcess)
 }

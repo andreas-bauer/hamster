@@ -14,11 +14,11 @@ var ErrMaxRetries = errors.New("error reached max retries")
 
 type Client struct {
 	hc         http.Client
-	maxRetries int
+	maxRetries uint
 	logFile    *os.File
 }
 
-func NewClient(timeOut, maxRetries int, logFile *os.File) Client {
+func NewClient(timeOut, maxRetries uint, logFile *os.File) Client {
 	return Client{
 		hc: http.Client{
 			Timeout: time.Duration(timeOut) * time.Second,
@@ -29,9 +29,9 @@ func NewClient(timeOut, maxRetries int, logFile *os.File) Client {
 }
 
 func (client Client) Get(url string) ([]byte, error) {
-	retryAttempt := 0
+	retryAttempt := uint(0)
 	for {
-		wait := retryAttempt * retryAttempt
+		wait := 2 << uint(retryAttempt)
 		response, _ := client.hc.Get(url)
 
 		if response != nil {
@@ -71,7 +71,7 @@ const (
 	failure status = "FAILURE"
 )
 
-func (client Client) log(status status, httpStatus int, retryAttempt int, url string) {
+func (client Client) log(status status, httpStatus int, retryAttempt uint, url string) {
 	timestamp := time.Now()
 	status_string := string(status)
 	if status == retry {
