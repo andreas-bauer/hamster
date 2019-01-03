@@ -18,12 +18,5 @@ func main() {
 
 	options := crawl.LoadOptionsFromJSONFile(configFile)
 
-	if options.MaxRetryAttempts == 0 {
-		options.MaxRetryAttempts = 5
-	}
-	if options.Timeout == 0 {
-		options.Timeout == 120
-	}
-
 	crawl.Run(options, gerrit.Feed, gerrit.PostProcess)
 }
