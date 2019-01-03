@@ -1,19 +1,15 @@
 package main
 
 import (
-	"flag"
+	"os"
 	"fmt"
 	"github.com/michaeldorner/hamster/internal/app/gerry"
 	"github.com/michaeldorner/hamster/pkg/crawl"
 )
 
 func main() {
-	configFile := flag.Arg(0)
-	flag.Parse()
+	configFile := os.Args[1]
 
-	if flag.NFlag() != 1 {
-		panic("no configuration file ")
-	}
 	fmt.Println("Loading ", configFile)
 
 	options := crawl.LoadOptionsFromJSONFile(configFile)
