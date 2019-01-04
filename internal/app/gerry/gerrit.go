@@ -55,7 +55,7 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 					detailsOptions := "o=LABELS&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=REVIEWER_UPDATES&o=MESSAGES"
 					url_query := fmt.Sprintf("%s/changes/?q=%s&%s&%s", options.URL, id, defaultOptions, detailsOptions)
 					items <- crawl.Item{
-						ID:   "Q" + id,
+						ID:  "Q" + id,
 						URL: url_query,
 					}
 
