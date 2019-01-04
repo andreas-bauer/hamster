@@ -46,13 +46,19 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 					if changeHasRevision(id, options.URL, client) {
 						defaultOptions += "&o=ALL_REVISIONS"
 					}
-					//detailsOptions := "o=LABELS&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=REVIEWER_UPDATES&o=MESSAGES"
 					url := fmt.Sprintf("%s/changes/%s/detail/?%s", options.URL, id, defaultOptions)
-					//url := fmt.Sprintf("%s/changes/?q=%s&%s&%s", options.URL, id, defaultOptions, detailsOptions)
 					items <- crawl.Item{
-						ID:  id,
+						ID:  "D" + id,
 						URL: url,
 					}
+
+					detailsOptions := "o=LABELS&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=REVIEWER_UPDATES&o=MESSAGES"
+					url_query := fmt.Sprintf("%s/changes/?q=%s&%s&%s", options.URL, id, defaultOptions, detailsOptions)
+					items <- crawl.Item{
+						ID:   "Q" + id,
+						URL: url_query,
+					}
+
 					_, exists := response["_more_changes"]
 					more = more || exists
 				}
