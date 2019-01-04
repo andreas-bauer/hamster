@@ -11,10 +11,10 @@ import (
 	"github.com/schollz/progressbar"
 )
 
-var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository store.Repository) <-chan crawl.Unit {
-	units := make(chan crawl.Unit)
+var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository store.Repository) <-chan crawl.Item {
+	items := make(chan crawl.Item)
 	go func() {
-		defer close(units)
+		defer close(items)
 
 		timeframes := crawl.GenerateTimeFrames(options.Period)
 
@@ -40,12 +40,16 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 
 				more := false
 				for _, response := range jsonResponse {
+					defaultOptions := "o=CHECK&o=DOWNLOAD_COMMANDS&o=ALL_COMMITS&o=ALL_FILES&o=WEB_LINKS&o=COMMIT_FOOTERS"
 					id := fmt.Sprintf("%v", response["_number"])
-					defaultOptions := "o=CHECK&o=DOWNLOAD_COMMANDS&o=ALL_COMMITS&o=ALL_REVISIONS&o=ALL_FILES&o=WEB_LINKS&o=COMMIT_FOOTERS"
+
+					if changeHasRevision(id, options.URL, client) {
+						defaultOptions += "&o=ALL_REVISIONS"
+					}
 					//detailsOptions := "o=LABELS&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=REVIEWER_UPDATES&o=MESSAGES"
 					url := fmt.Sprintf("%s/changes/%s/detail/?%s", options.URL, id, defaultOptions)
 					//url := fmt.Sprintf("%s/changes/?q=%s&%s&%s", options.URL, id, defaultOptions, detailsOptions)
-					units <- crawl.Unit{
+					items <- crawl.Item{
 						ID:  id,
 						URL: url,
 					}
@@ -63,17 +67,23 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 		}
 		fmt.Println("") // nice finish :)
 	}()
-	return units
+	return items
 }
 
-var PostProcess crawl.PostProcess = func(options crawl.Options, client http.Client, in <-chan crawl.Unit) <-chan crawl.Unit {
-	units := make(chan crawl.Unit)
+func changeHasRevision(id string, baseURL string, client http.Client) bool {
+	url := fmt.Sprintf("%s/changes/?q=%v&o=CURRENT_REVISION", baseURL, id)
+	response_body, _ := client.Get(url)
+	return string(response_body) != ")]}'\n[]\n"
+}
+
+var PostProcess crawl.PostProcess = func(options crawl.Options, client http.Client, in <-chan crawl.Item) <-chan crawl.Item {
+	items := make(chan crawl.Item)
 	go func() {
-		defer close(units)
-		for unit := range in {
-			unit.Payload = unit.Payload[5:]
-			units <- unit
+		defer close(items)
+		for item := range in {
+			item.Payload = item.Payload[5:]
+			items <- item
 		}
 	}()
-	return units
+	return items
 }

@@ -1,6 +1,6 @@
 package crawl
 
-type Unit struct {
+type Item struct {
 	ID      string
 	URL     string
 	Payload []byte

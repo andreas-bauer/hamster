@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
 	"fmt"
 	"github.com/michaeldorner/hamster/internal/app/gerry"
 	"github.com/michaeldorner/hamster/pkg/crawl"
+	"os"
 )
 
 func main() {

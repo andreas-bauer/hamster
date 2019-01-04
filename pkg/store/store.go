@@ -26,12 +26,12 @@ func (repository Repository) OptionsFilePath() string {
 	return filepath.Clean(repository.outDir + "/options.json")
 }
 
-func (repository Repository) UnitFilePath(id string) string {
+func (repository Repository) ItemFilePath(id string) string {
 	return filepath.Clean(repository.outDir + fmt.Sprintf("/data/%v.json", id))
 }
 
-func (repository Repository) UnitFileExists(id string) bool {
-	_, err := os.Stat(repository.UnitFilePath(id))
+func (repository Repository) ItemFileExists(id string) bool {
+	_, err := os.Stat(repository.ItemFilePath(id))
 	return !os.IsNotExist(err)
 }
 

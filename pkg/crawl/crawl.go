@@ -5,8 +5,8 @@ import (
 	"github.com/michaeldorner/hamster/pkg/store"
 )
 
-type Feed func(Options, http.Client, store.Repository) <-chan Unit
-type PostProcess func(Options, http.Client, <-chan Unit) <-chan Unit
+type Feed func(Options, http.Client, store.Repository) <-chan Item
+type PostProcess func(Options, http.Client, <-chan Item) <-chan Item
 
 func Run(options Options, feed Feed, postProcess PostProcess) {
 	repository := store.NewRepository(options.OutDir)
@@ -29,40 +29,40 @@ func storeOptions(options Options, repository store.Repository) {
 	}
 }
 
-func filter(options Options, repository store.Repository, in <-chan Unit) <-chan Unit {
-	out := make(chan Unit)
+func filter(options Options, repository store.Repository, in <-chan Item) <-chan Item {
+	out := make(chan Item)
 	go func() {
 		defer close(out)
-		for unit := range in {
-			if !(options.SkipExistingFiles && repository.UnitFileExists(unit.ID)) {
-				out <- unit
+		for item := range in {
+			if !(options.SkipExistingFiles && repository.ItemFileExists(item.ID)) {
+				out <- item
 			}
 		}
 	}()
 	return out
 }
 
-func getPayload(client http.Client, in <-chan Unit) <-chan Unit {
-	out := make(chan Unit)
+func getPayload(client http.Client, in <-chan Item) <-chan Item {
+	out := make(chan Item)
 	go func() {
 		defer close(out)
-		for unit := range in {
-			payload, err := client.Get(unit.URL)
+		for item := range in {
+			payload, err := client.Get(item.URL)
 			if err != nil {
 				panic(err)
 			} else {
-				unit.Payload = payload
-				out <- unit
+				item.Payload = payload
+				out <- item
 			}
 		}
 	}()
 	return out
 }
 
-func persist(repository store.Repository, in <-chan Unit) {
-	for unit := range in {
-		path := repository.UnitFilePath(unit.ID)
-		err := repository.Store(path, unit.Payload)
+func persist(repository store.Repository, in <-chan Item) {
+	for item := range in {
+		path := repository.ItemFilePath(item.ID)
+		err := repository.Store(path, item.Payload)
 		if err != nil {
 			panic(err)
 		}
