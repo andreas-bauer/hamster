@@ -13,9 +13,9 @@ type Repository struct {
 
 func NewRepository(outDir string) Repository {
 	var repository Repository = Repository{
-		outDir: outDir,
+		outDir: filepath.Clean(outDir),
 	}
-	err := os.MkdirAll(filepath.Clean(repository.outDir+"/data/"), os.ModePerm)
+	err := os.MkdirAll(repository.DataPath(), os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +27,7 @@ func (repository Repository) OptionsFilePath() string {
 }
 
 func (repository Repository) DataPath() string {
-	return filepath.Clean(repository.outDir + fmt.Sprintf("/data/"))
+	return filepath.Clean(repository.outDir) + fmt.Sprintf("/data/")
 }
 
 func (repository Repository) FileExists(path string) bool {
