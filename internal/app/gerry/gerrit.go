@@ -48,7 +48,7 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 					}
 					url := fmt.Sprintf("%s/changes/%s/detail/?%s", options.URL, id, defaultOptions)
 					items <- crawl.Item{
-						ID:  "D" + id,
+						ID:  id+ "_d",
 						URL: url,
 						FileNameExtensions: "json",
 					}
@@ -56,8 +56,9 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 					detailsOptions := "o=LABELS&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=REVIEWER_UPDATES&o=MESSAGES"
 					url_query := fmt.Sprintf("%s/changes/?q=change:%s&%s&%s", options.URL, id, defaultOptions, detailsOptions)
 					items <- crawl.Item{
-						ID:  "Q" + id,
+						ID:  id + "_q",
 						URL: url_query,
+						FileNameExtensions: "json",
 					}
 
 					_, exists := response["_more_changes"]
