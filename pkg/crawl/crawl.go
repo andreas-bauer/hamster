@@ -34,7 +34,7 @@ func filter(options Options, repository store.Repository, in <-chan Item) <-chan
 	go func() {
 		defer close(out)
 		for item := range in {
-			path := repository.DataPath() + item.FileName()
+			path := repository.AppendDataPath(item.FileName()) 
 			if !(options.SkipExistingFiles && repository.FileExists(path)) {
 				out <- item
 			}
@@ -62,8 +62,8 @@ func getPayload(client http.Client, in <-chan Item) <-chan Item {
 
 func persist(repository store.Repository, in <-chan Item) {
 	for item := range in {
-		base_path := repository.DataPath() + item.FileName()
-		err := repository.Store(base_path, item.Payload)
+		file_path := repository.AppendDataPath(item.FileName())
+		err := repository.Store(file_path, item.Payload)
 		if err != nil {
 			panic(err)
 		}

@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,7 +14,7 @@ func NewRepository(outDir string) Repository {
 	var repository Repository = Repository{
 		outDir: filepath.Clean(outDir),
 	}
-	err := os.MkdirAll(repository.DataPath(), os.ModePerm)
+	err := os.MkdirAll(repository.AppendDataPath(""), os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
@@ -23,20 +22,20 @@ func NewRepository(outDir string) Repository {
 }
 
 func (repository Repository) OptionsFilePath() string {
-	return filepath.Clean(repository.outDir + "/options.json")
+	return filepath.Join(repository.outDir, "options.json")
 }
 
-func (repository Repository) DataPath() string {
-	return filepath.Clean(repository.outDir) + fmt.Sprintf("/data/")
+func (repository Repository) AppendDataPath(append string) string {
+	return filepath.Join(repository.outDir, "data", append)
 }
 
 func (repository Repository) FileExists(path string) bool {
-	_, err := os.Stat(path)
+	_, err := os.Stat(filepath.Clean(path))
 	return !os.IsNotExist(err)
 }
 
 func (repository Repository) LogFilePath() string {
-	return filepath.Clean(repository.outDir + "/log.log")
+	return filepath.Join(repository.outDir, "log.log")
 }
 
 func (repository Repository) LogFile() *os.File {
@@ -48,5 +47,5 @@ func (repository Repository) LogFile() *os.File {
 }
 
 func (repository Repository) Store(path string, payload []byte) error {
-	return ioutil.WriteFile(path, payload, os.ModePerm)
+	return ioutil.WriteFile(filepath.Clean(path), payload, os.ModePerm)
 }
