@@ -32,7 +32,10 @@ func (client Client) Get(url string) ([]byte, error) {
 	retryAttempt := uint(0)
 	for {
 		wait := 2 << uint(retryAttempt)
-		response, _ := client.hc.Get(url)
+		response, err := client.hc.Get(url)
+		if err != nil {
+			client.log(timeout, 408, retryAttempt, url)
+		}
 
 		if response != nil {
 			defer response.Body.Close()
@@ -69,6 +72,7 @@ const (
 	success status = "SUCCESS"
 	retry   status = "RETRY"
 	failure status = "FAILURE"
+	timeout status = "TIMEOUT"
 )
 
 func (client Client) log(status status, httpStatus int, retryAttempt uint, url string) {
