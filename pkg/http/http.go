@@ -35,6 +35,7 @@ func (client Client) Get(url string) ([]byte, error) {
 		response, err := client.hc.Get(url)
 		if err != nil {
 			client.log(timeout, 408, retryAttempt, url)
+			return []byte{}, err
 		}
 
 		if response != nil {
