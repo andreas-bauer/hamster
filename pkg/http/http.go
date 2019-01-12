@@ -35,9 +35,7 @@ func (client Client) Get(url string) ([]byte, error) {
 		response, err := client.hc.Get(url)
 		if err != nil {
 			client.log(timeout, 408, retryAttempt, url)
-		}
-
-		if response != nil {
+		} else {
 			defer response.Body.Close()
 
 			if response.StatusCode == http.StatusOK && response.Body != nil {
@@ -65,6 +63,16 @@ func (client Client) Get(url string) ([]byte, error) {
 		}
 	}
 }
+
+func (client Client) HTTPStatusForURL(url string) int {
+	response, err := client.hc.Get(url)
+	if err != nil {
+		return response.StatusCode
+	} else {
+		panic(err)
+	}
+}
+
 
 type status string
 
