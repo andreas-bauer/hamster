@@ -64,12 +64,12 @@ func (client Client) Get(url string) ([]byte, error) {
 	}
 }
 
-func (client Client) HTTPStatusForURL(url string) int {
+func (client Client) GetHTTPStatus(url string) (int, error) {
 	response, err := client.hc.Get(url)
 	if err != nil {
-		return response.StatusCode
+		return 0, err
 	} else {
-		panic(err)
+		return response.StatusCode, err
 	}
 }
 
