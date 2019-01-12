@@ -17,7 +17,7 @@ type TimeFrame struct {
 
 type Period struct {
 	TimeFrame
-	StepSize Duration `json:"stepSize"`
+	ChunkSize Duration `json:"chunkSize"`
 }
 
 type Duration struct {
@@ -27,10 +27,10 @@ type Duration struct {
 func GenerateTimeFrames(period Period) []TimeFrame {
 	res := make([]TimeFrame, 0)
 
-	for t := period.From.Time; t.Before(period.To.Time); t = t.Add(period.StepSize.Duration) {
+	for t := period.From.Time; t.Before(period.To.Time); t = t.Add(period.ChunkSize.Duration) {
 		r := TimeFrame{}
 		r.From.Time = t
-		r.To.Time = t.Add(period.StepSize.Duration).Add(-1 * time.Millisecond)
+		r.To.Time = t.Add(period.ChunkSize.Duration).Add(-1 * time.Millisecond)
 		res = append(res, r)
 	}
 	return res
@@ -88,6 +88,6 @@ func (ts *Timestamp) String() string {
 	return ts.Time.Format(stringLayout)
 }
 
-func (ts Timestamp) LastTimestampForStepSize(duration Duration) Timestamp {
+func (ts Timestamp) LastTimestampForChunkSize(duration Duration) Timestamp {
 	return Timestamp{ts.Time.Add(duration.Duration).Add(-1 * time.Millisecond)}
 }

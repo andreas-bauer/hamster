@@ -45,7 +45,7 @@ func TestPeriod(t *testing.T) {
 	{
 		"from":"2018-01-01 00:00:00.000", 
 		"to":"2018-02-01 00:00:00.000",
-		"stepSize":"24h"
+		"chunkSize":"24h"
 	}`
 	rd := Period{}
 	err := json.Unmarshal([]byte(rangeJSONData), &rd)
@@ -66,10 +66,10 @@ func TestGenerateTimeFrames(t *testing.T) {
 	duration1d := parseDuration("24h", t)
 	duration1h := parseDuration("1h", t)
 
-	var testGenerateTimeFrames = func(from, to Timestamp, stepSize Duration, expected int) {
+	var testGenerateTimeFrames = func(from, to Timestamp, chunkSize Duration, expected int) {
 		period := Period{
 			TimeFrame: TimeFrame{from, to},
-			StepSize:  stepSize,
+			ChunkSize:  chunkSize,
 		}
 
 		l := len(GenerateTimeFrames(period))

@@ -11,7 +11,7 @@ func TestUnmarshalOptions(t *testing.T) {
 		"period": {
 			"from": "2008-07-01 00:00:00.000", 
 			"to":"2018-12-31 00:00:00.000",
-			"stepSize": "24h"
+			"chunkSize": "24h"
 		},
 		"outDir":"./android/",
 		"maxRetryAttempts":10,
