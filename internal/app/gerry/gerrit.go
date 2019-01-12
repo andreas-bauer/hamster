@@ -86,7 +86,7 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 			progress := float64(i+1) / float64(size)
 			remaining_time := time.Duration(elapsed_time.Seconds() / progress * float64(time.Second))
 
-			fmt.Printf("\r\f%v/%v (%.2f %%) [%v | %v]", i+1, size, progress * 100.0, elapsed_time.Round(time.Second), remaining_time.Round(time.Second))
+			fmt.Printf("\r%v/%v (%.2f %%) [%v | %v]", i+1, size, progress * 100.0, elapsed_time.Round(time.Second), remaining_time.Round(time.Second))
 		}
 		fmt.Println("") // nice finish :)
 	}()
