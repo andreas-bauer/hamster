@@ -4,30 +4,34 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"time"
+	"strings"
 
 	"github.com/michaeldorner/hamster/pkg/crawl"
 	"github.com/michaeldorner/hamster/pkg/http"
 	"github.com/michaeldorner/hamster/pkg/store"
-	"github.com/schollz/progressbar"
 )
+
 
 var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository store.Repository) <-chan crawl.Item {
 	items := make(chan crawl.Item)
 	go func() {
 		defer close(items)
 
+		firstChange := getFirstChange(options.URL, client)
+		baseOptionsDetail := getAvailableOptions(fmt.Sprintf("%s/changes/%v/detail/?", options.URL, firstChange["_number"]), client)
+		baseOptionsQuery := getAvailableOptions(fmt.Sprintf("%s/changes/?q=change:%v&", options.URL, firstChange["_number"]), client)
+		
 		timeframes := crawl.GenerateTimeFrames(options.Period)
 
 		size := len(timeframes)
-		bar := progressbar.NewOptions(size, progressbar.OptionSetRenderBlankState(true), progressbar.OptionShowIts(), progressbar.OptionShowCount(), progressbar.OptionSetWidth(100))
-		bar.RenderBlank()
-
-		for _, timeframe := range timeframes {
-			offset := 0
+		start := time.Now()
+		for i, timeframe := range timeframes {
+			S := 0
 			for {
 				from := url.QueryEscape(timeframe.From.String())
 				to := url.QueryEscape(timeframe.To.String())
-				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", options.URL, from, to, offset)
+				url := fmt.Sprintf("%s/changes/?q=after:{%s}+before:{%s}&S=%v", options.URL, from, to, S)
 				response_body, err := client.Get(url)
 				if err != nil {
 					panic(err)
@@ -39,39 +43,43 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 				}
 
 				more := false
-				for _, response := range jsonResponse {
-					defaultOptions := "o=CHECK&o=DOWNLOAD_COMMANDS&o=ALL_COMMITS&o=ALL_FILES&o=WEB_LINKS&o=COMMIT_FOOTERS"
-					id := fmt.Sprintf("%v", response["_number"])
+				for _, change := range jsonResponse {
+					id := fmt.Sprintf("%v", change["_number"])
+
+					urlOptions := baseOptionsDetail
 
 					if changeHasRevision(id, options.URL, client) {
-						defaultOptions += "&o=ALL_REVISIONS"
+						urlOptions += "&o=ALL_REVISIONS"
 					}
-					url := fmt.Sprintf("%s/changes/%s/detail/?%s", options.URL, id, defaultOptions)
+					url := fmt.Sprintf("%s/changes/%s/detail/?%s", options.URL, id, urlOptions)
 					items <- crawl.Item{
 						ID:  id+ "_d",
 						URL: url,
 						FileNameExtensions: "json",
 					}
 
-					detailsOptions := "o=LABELS&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=REVIEWER_UPDATES&o=MESSAGES"
-					url_query := fmt.Sprintf("%s/changes/?q=change:%s&%s&%s", options.URL, id, defaultOptions, detailsOptions)
+					url_query := fmt.Sprintf("%s/changes/?q=change:%s&%s", options.URL, id, baseOptionsQuery)
 					items <- crawl.Item{
 						ID:  id + "_q",
 						URL: url_query,
 						FileNameExtensions: "json",
 					}
 
-					_, exists := response["_more_changes"]
+					_, exists := change["_more_changes"]
 					more = more || exists
 				}
 
 				if more {
-					offset = offset + len(jsonResponse)
+					S = S + len(jsonResponse)
 				} else {
 					break
 				}
 			}
-			bar.Add(1)
+			elapsed_time := time.Since(start)
+			progress := float64(i) / float64(size)
+			remaining_time := time.Duration(elapsed_time.Seconds() / progress * float64(time.Second))
+
+			fmt.Printf("%v/%v (%.2f %%) [%v | %v]\r ", i, size, progress * 100.0, elapsed_time, remaining_time)
 		}
 		fmt.Println("") // nice finish :)
 	}()
@@ -79,9 +87,39 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 }
 
 func changeHasRevision(id string, baseURL string, client http.Client) bool {
-	url := fmt.Sprintf("%s/changes/?q=%v&o=CURRENT_REVISION", baseURL, id)
+	url := fmt.Sprintf("%s/changes/?q=%s&o=CURRENT_REVISION", baseURL, id)
 	response_body, _ := client.Get(url)
 	return string(response_body) != ")]}'\n[]\n"
+}
+
+func getFirstChange(baseURL string, client http.Client) map[string]interface{} {
+	url := fmt.Sprintf("%s/changes/", baseURL)
+	response_body, err := client.Get(url)
+	if err != nil {
+		panic(err)
+	}
+	jsonResponse := make([]map[string]interface{}, 0)
+	err = json.Unmarshal(response_body[5:], &jsonResponse)
+	if err != nil {
+		panic(err)
+	}
+	return jsonResponse[0]
+}
+
+func getAvailableOptions(url string, client http.Client) string {
+	availableOptions := []string{}
+	for _, option := range []string{"CHECK", "DOWNLOAD_COMMANDS", "ALL_COMMITS", "ALL_FILES", "WEB_LINKS", "COMMIT_FOOTERS", "LABELS", "DETAILED_LABELS", "DETAILED_ACCOUNTS", "REVIEWER_UPDATES", "MESSAGES"} {
+		httpStatus, err := client.GetHTTPStatus(url+"o="+option)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(url+"o="+option, option, httpStatus)
+
+		if httpStatus == 200 {
+			availableOptions = append(availableOptions, "o=" + option)
+		}
+	}
+	return strings.Join(availableOptions, "&")
 }
 
 var PostProcess crawl.PostProcess = func(options crawl.Options, client http.Client, in <-chan crawl.Item) <-chan crawl.Item {
