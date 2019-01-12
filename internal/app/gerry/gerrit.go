@@ -21,7 +21,7 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 		firstChange := getFirstChange(options.URL, client)
 		baseOptionsDetail := getAvailableOptions(fmt.Sprintf("%s/changes/%v/detail/?", options.URL, firstChange["_number"]), client)
 		baseOptionsQuery := getAvailableOptions(fmt.Sprintf("%s/changes/?q=change:%v&", options.URL, firstChange["_number"]), client)
-		
+
 		timeframes := crawl.GenerateTimeFrames(options.Period)
 
 		size := len(timeframes)
@@ -79,7 +79,7 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 			progress := float64(i) / float64(size)
 			remaining_time := time.Duration(elapsed_time.Seconds() / progress * float64(time.Second))
 
-			fmt.Printf("%v/%v (%.2f %%) [%v | %v]\r ", i, size, progress * 100.0, elapsed_time, remaining_time)
+			fmt.Printf("\r%v/%v (%.2f %%) [%v | %v]                       ", i, size, progress * 100.0, elapsed_time, remaining_time)
 		}
 		fmt.Println("") // nice finish :)
 	}()
