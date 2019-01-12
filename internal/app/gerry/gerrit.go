@@ -18,14 +18,21 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 	go func() {
 		defer close(items)
 
+		fmt.Println("Check available parameters")
+
 		firstChange := getFirstChange(options.URL, client)
 		baseOptionsDetail := getAvailableOptions(fmt.Sprintf("%s/changes/%v/detail/?", options.URL, firstChange["_number"]), client)
 		baseOptionsQuery := getAvailableOptions(fmt.Sprintf("%s/changes/?q=change:%v&", options.URL, firstChange["_number"]), client)
 
+		fmt.Println("Create time frames")
+
 		timeframes := crawl.GenerateTimeFrames(options.Period)
+
+		fmt.Println("Start crawling")
 
 		size := len(timeframes)
 		start := time.Now()
+
 		for i, timeframe := range timeframes {
 			S := 0
 			for {
@@ -76,10 +83,10 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 				}
 			}
 			elapsed_time := time.Since(start)
-			progress := float64(i) / float64(size)
+			progress := float64(i+1) / float64(size)
 			remaining_time := time.Duration(elapsed_time.Seconds() / progress * float64(time.Second))
 
-			fmt.Printf("\r%v/%v (%.2f %%) [%v | %v]                       ", i, size, progress * 100.0, elapsed_time, remaining_time)
+			fmt.Printf("\r\f%v/%v (%.2f %%) [%v | %v]", i+1, size, progress * 100.0, elapsed_time.Round(time.Second), remaining_time.Round(time.Second))
 		}
 		fmt.Println("") // nice finish :)
 	}()
@@ -113,7 +120,6 @@ func getAvailableOptions(url string, client http.Client) string {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(url+"o="+option, option, httpStatus)
 
 		if httpStatus == 200 {
 			availableOptions = append(availableOptions, "o=" + option)

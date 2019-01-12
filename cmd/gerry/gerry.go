@@ -10,7 +10,7 @@ import (
 func main() {
 	configFile := os.Args[1]
 
-	fmt.Println("Loading ", configFile)
+	fmt.Println("Load", configFile)
 
 	options := crawl.LoadOptionsFromJSONFile(configFile)
 
