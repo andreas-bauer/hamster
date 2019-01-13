@@ -22,7 +22,7 @@ func NewRepository(outDir string) Repository {
 }
 
 func (repository Repository) ConfigurationFilePath() string {
-	return filepath.Join(repository.outDir, "options.json")
+	return filepath.Join(repository.outDir, "config.json")
 }
 
 func (repository Repository) AppendDataPath(append string) string {
@@ -35,7 +35,7 @@ func (repository Repository) FileExists(path string) bool {
 }
 
 func (repository Repository) LogFilePath() string {
-	return filepath.Join(repository.outDir, "log.log")
+	return filepath.Join(repository.outDir, "crawl.log")
 }
 
 func (repository Repository) LogFile() *os.File {
