@@ -21,7 +21,7 @@ func NewRepository(outDir string) Repository {
 	return repository
 }
 
-func (repository Repository) OptionsFilePath() string {
+func (repository Repository) ConfigurationFilePath() string {
 	return filepath.Join(repository.outDir, "options.json")
 }
 

@@ -12,7 +12,7 @@ func main() {
 
 	fmt.Println("Load", configFile)
 
-	options := crawl.LoadOptionsFromJSONFile(configFile)
+	options := crawl.LoadConfigurationFromJSONFile(configFile)
 
 	crawl.Run(options, gerrit.Feed, gerrit.PostProcess)
 }

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestUnmarshalOptions(t *testing.T) {
+func TestUnmarshalConfiguration(t *testing.T) {
 	var optionsJSONData = `{
 		"url":"https://android-review.googlesource.com",
 		"period": {
@@ -18,7 +18,7 @@ func TestUnmarshalOptions(t *testing.T) {
 		"timeout":120,
 		"skipExistingFiles":false
 	}`
-	options := Options{}
+	options := Configuration{}
 	err := json.Unmarshal([]byte(optionsJSONData), &options)
 	if err != nil {
 		t.Error("JSON unmarshal error", err)

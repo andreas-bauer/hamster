@@ -16,7 +16,7 @@ type ChangeInfo struct {
 	MoreChanges bool  `json:"_more_changes"`
 }
 
-var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository store.Repository) <-chan crawl.Item {
+var Feed crawl.Feed = func(options crawl.Configuration, client http.Client, repository store.Repository) <-chan crawl.Item {
 	items := make(chan crawl.Item)
 	go func() {
 		defer close(items)
@@ -24,8 +24,8 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 		fmt.Println("Check available parameters")
 
 		firstChange := getFirstChange(options.URL, client)
-		baseOptionsDetail := getAvailableOptions(fmt.Sprintf("%s/changes/%v/detail/?", options.URL, firstChange.Number), client)
-		baseOptionsQuery := getAvailableOptions(fmt.Sprintf("%s/changes/?q=change:%v&", options.URL, firstChange.Number), client)
+		baseConfigurationDetail := getAvailableConfiguration(fmt.Sprintf("%s/changes/%v/detail/?", options.URL, firstChange.Number), client)
+		baseConfigurationQuery := getAvailableConfiguration(fmt.Sprintf("%s/changes/?q=change:%v&", options.URL, firstChange.Number), client)
 
 		fmt.Println("Create time frames")
 
@@ -56,19 +56,19 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 				for _, change := range changes {
 					id := fmt.Sprintf("%v", change.Number)
 
-					urlOptions := baseOptionsDetail
+					urlConfiguration := baseConfigurationDetail
 
 					if changeHasRevision(id, options.URL, client) {
-						urlOptions += "&o=ALL_REVISIONS"
+						urlConfiguration += "&o=ALL_REVISIONS"
 					}
-					url := fmt.Sprintf("%s/changes/%s/detail/?%s", options.URL, id, urlOptions)
+					url := fmt.Sprintf("%s/changes/%s/detail/?%s", options.URL, id, urlConfiguration)
 					items <- crawl.Item{
 						ID:  id+ "_d",
 						URL: url,
 						FileNameExtensions: "json",
 					}
 
-					url_query := fmt.Sprintf("%s/changes/?q=change:%s&%s", options.URL, id, baseOptionsQuery)
+					url_query := fmt.Sprintf("%s/changes/?q=change:%s&%s", options.URL, id, baseConfigurationQuery)
 					items <- crawl.Item{
 						ID:  id + "_q",
 						URL: url_query,
@@ -115,8 +115,8 @@ func getFirstChange(baseURL string, client http.Client) ChangeInfo {
 	return jsonResponse[0]
 }
 
-func getAvailableOptions(url string, client http.Client) string {
-	availableOptions := []string{}
+func getAvailableConfiguration(url string, client http.Client) string {
+	availableConfiguration := []string{}
 	for _, option := range []string{"CHECK", "DOWNLOAD_COMMANDS", "ALL_COMMITS", "ALL_FILES", "WEB_LINKS", "COMMIT_FOOTERS", "LABELS", "DETAILED_LABELS", "DETAILED_ACCOUNTS", "REVIEWER_UPDATES", "MESSAGES"} {
 		httpStatus, err := client.GetHTTPStatus(url+"o="+option)
 		if err != nil {
@@ -124,13 +124,13 @@ func getAvailableOptions(url string, client http.Client) string {
 		}
 
 		if httpStatus == 200 {
-			availableOptions = append(availableOptions, "o=" + option)
+			availableConfiguration = append(availableConfiguration, "o=" + option)
 		}
 	}
-	return strings.Join(availableOptions, "&")
+	return strings.Join(availableConfiguration, "&")
 }
 
-var PostProcess crawl.PostProcess = func(options crawl.Options, client http.Client, in <-chan crawl.Item) <-chan crawl.Item {
+var PostProcess crawl.PostProcess = func(options crawl.Configuration, client http.Client, in <-chan crawl.Item) <-chan crawl.Item {
 	items := make(chan crawl.Item)
 	go func() {
 		defer close(items)

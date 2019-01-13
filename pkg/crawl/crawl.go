@@ -5,14 +5,14 @@ import (
 	"github.com/michaeldorner/hamster/pkg/store"
 )
 
-type Feed func(Options, http.Client, store.Repository) <-chan Item
-type PostProcess func(Options, http.Client, <-chan Item) <-chan Item
+type Feed func(Configuration, http.Client, store.Repository) <-chan Item
+type PostProcess func(Configuration, http.Client, <-chan Item) <-chan Item
 
-func Run(options Options, feed Feed, postProcess PostProcess) {
+func Run(options Configuration, feed Feed, postProcess PostProcess) {
 	repository := store.NewRepository(options.OutDir)
 	client := http.NewClient(options.Timeout, options.MaxRetryAttempts, repository.LogFile())
 
-	storeOptions(options, repository)
+	storeConfiguration(options, repository)
 	afterFeed := feed(options, client, repository)
 	afterFilter := filter(options, repository, afterFeed)
 	afterPayload := getPayload(client, afterFilter)
@@ -20,16 +20,16 @@ func Run(options Options, feed Feed, postProcess PostProcess) {
 	persist(repository, afterPostProcess)
 }
 
-func storeOptions(options Options, repository store.Repository) {
+func storeConfiguration(options Configuration, repository store.Repository) {
 	jsonData := options.JSON()
-	path := repository.OptionsFilePath()
+	path := repository.ConfigurationFilePath()
 	err := repository.Store(path, jsonData)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func filter(options Options, repository store.Repository, in <-chan Item) <-chan Item {
+func filter(options Configuration, repository store.Repository, in <-chan Item) <-chan Item {
 	out := make(chan Item)
 	go func() {
 		defer close(out)

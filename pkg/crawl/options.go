@@ -10,16 +10,16 @@ const (
 	DefaultMaxRetryAttempts uint = 5
 )
 
-type Options struct {
-	URL               string `json:"url"`
-	Period            Period `json:"period"`
-	OutDir            string `json:"outDir"`
-	MaxRetryAttempts  uint   `json:"maxRetryAttempts"`
-	Timeout           uint   `json:"timeout"`
-	SkipExistingFiles bool   `json:"skipExistingFiles"`
+type Configuration struct {
+	URL               string `json:"url,omitempty"`
+	Period            Period `json:"period,omitempty"`
+	OutDir            string `json:"outDir,omitempty"`
+	MaxRetryAttempts  uint   `json:"maxRetryAttempts,omitempty"`
+	Timeout           uint   `json:"timeout,omitempty"`
+	SkipExistingFiles bool   `json:"skipExistingFiles,omitempty"`
 }
 
-func (options Options) JSON() []byte {
+func (options Configuration) JSON() []byte {
 	data, err := json.MarshalIndent(options, "", "    ")
 	if err != nil {
 		panic(err)
@@ -28,12 +28,12 @@ func (options Options) JSON() []byte {
 	}
 }
 
-func LoadOptionsFromJSONFile(configurationFilePath string) Options {
+func LoadConfigurationFromJSONFile(configurationFilePath string) Configuration {
 	jsonData, err := ioutil.ReadFile(configurationFilePath)
 	if err != nil {
 		panic(err)
 	}
-	var configuration Options
+	var configuration Configuration
 	if err := json.Unmarshal(jsonData, &configuration); err != nil {
 		panic(err)
 	}
