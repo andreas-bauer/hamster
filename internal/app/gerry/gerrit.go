@@ -11,7 +11,10 @@ import (
 	"github.com/michaeldorner/hamster/pkg/http"
 	"github.com/michaeldorner/hamster/pkg/store"
 )
-
+type ChangeInfo struct {
+	Number int  `json:"_number"`
+	MoreChanges bool  `json:"_more_changes"`
+}
 
 var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository store.Repository) <-chan crawl.Item {
 	items := make(chan crawl.Item)
@@ -21,8 +24,8 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 		fmt.Println("Check available parameters")
 
 		firstChange := getFirstChange(options.URL, client)
-		baseOptionsDetail := getAvailableOptions(fmt.Sprintf("%s/changes/%v/detail/?", options.URL, firstChange["_number"]), client)
-		baseOptionsQuery := getAvailableOptions(fmt.Sprintf("%s/changes/?q=change:%v&", options.URL, firstChange["_number"]), client)
+		baseOptionsDetail := getAvailableOptions(fmt.Sprintf("%s/changes/%v/detail/?", options.URL, firstChange.Number), client)
+		baseOptionsQuery := getAvailableOptions(fmt.Sprintf("%s/changes/?q=change:%v&", options.URL, firstChange.Number), client)
 
 		fmt.Println("Create time frames")
 
@@ -43,15 +46,15 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 				if err != nil {
 					panic(err)
 				}
-				jsonResponse := make([]map[string]interface{}, 0)
-				err = json.Unmarshal(response_body[5:], &jsonResponse)
+				changes := make([]ChangeInfo, 0)
+				err = json.Unmarshal(response_body[5:], &changes)
 				if err != nil {
 					panic(err)
 				}
 
 				more := false
-				for _, change := range jsonResponse {
-					id := fmt.Sprintf("%v", change["_number"])
+				for _, change := range changes {
+					id := fmt.Sprintf("%v", change.Number)
 
 					urlOptions := baseOptionsDetail
 
@@ -72,12 +75,11 @@ var Feed crawl.Feed = func(options crawl.Options, client http.Client, repository
 						FileNameExtensions: "json",
 					}
 
-					_, exists := change["_more_changes"]
-					more = more || exists
+					more = more || change.MoreChanges
 				}
 
 				if more {
-					S = S + len(jsonResponse)
+					S = S + len(changes)
 				} else {
 					break
 				}
@@ -99,17 +101,18 @@ func changeHasRevision(id string, baseURL string, client http.Client) bool {
 	return string(response_body) != ")]}'\n[]\n"
 }
 
-func getFirstChange(baseURL string, client http.Client) map[string]interface{} {
-	url := fmt.Sprintf("%s/changes/", baseURL)
+func getFirstChange(baseURL string, client http.Client) ChangeInfo {
+	url := fmt.Sprintf("%s/changes/?n=1", baseURL)
 	response_body, err := client.Get(url)
 	if err != nil {
 		panic(err)
 	}
-	jsonResponse := make([]map[string]interface{}, 0)
+	jsonResponse := make([]ChangeInfo, 0)
 	err = json.Unmarshal(response_body[5:], &jsonResponse)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(int(jsonResponse[0].Number))
 	return jsonResponse[0]
 }
 
