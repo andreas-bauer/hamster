@@ -112,7 +112,6 @@ func getFirstChange(baseURL string, client http.Client) ChangeInfo {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(int(jsonResponse[0].Number))
 	return jsonResponse[0]
 }
 
