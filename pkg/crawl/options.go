@@ -17,10 +17,11 @@ type Configuration struct {
 	MaxRetryAttempts  uint   `json:"maxRetryAttempts,omitempty"`
 	Timeout           uint   `json:"timeout,omitempty"`
 	SkipExistingFiles bool   `json:"skipExistingFiles,omitempty"`
+	ParallelRequests uint   `json:"parallelRequests,omitempty"`
 }
 
-func (options Configuration) JSON() []byte {
-	data, err := json.MarshalIndent(options, "", "    ")
+func (configuration Configuration) JSON() []byte {
+	data, err := json.MarshalIndent(configuration, "", "    ")
 	if err != nil {
 		panic(err)
 	} else {

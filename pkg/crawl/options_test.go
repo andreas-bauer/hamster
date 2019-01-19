@@ -6,7 +6,7 @@ import (
 )
 
 func TestUnmarshalConfiguration(t *testing.T) {
-	var optionsJSONData = `{
+	var configurationJSONData = `{
 		"url":"https://android-review.googlesource.com",
 		"period": {
 			"from": "2008-07-01 00:00:00.000", 
@@ -16,26 +16,27 @@ func TestUnmarshalConfiguration(t *testing.T) {
 		"outDir":"./android/",
 		"maxRetryAttempts":10,
 		"timeout":120,
-		"skipExistingFiles":false
+		"skipExistingFiles":false,
+		"parallelRequests":2
 	}`
-	options := Configuration{}
-	err := json.Unmarshal([]byte(optionsJSONData), &options)
+	configuration := Configuration{}
+	err := json.Unmarshal([]byte(configurationJSONData), &configuration)
 	if err != nil {
 		t.Error("JSON unmarshal error", err)
 	}
-	if options.URL != "https://android-review.googlesource.com" {
-		t.Error("Expecting 'https://android-review.googlesource.com', got", options.URL)
+	if configuration.URL != "https://android-review.googlesource.com" {
+		t.Error("Expecting 'https://android-review.googlesource.com', got", configuration.URL)
 	}
 
-	if options.MaxRetryAttempts != 10 {
-		t.Error("Expecting '10' for MaxRetryAttempts, got ", options.MaxRetryAttempts)
+	if configuration.MaxRetryAttempts != 10 {
+		t.Error("Expecting '10' for MaxRetryAttempts, got ", configuration.MaxRetryAttempts)
 	}
 
-	if options.Timeout != 120 {
-		t.Error("Expecting '120' for Timeout, got ", options.Timeout)
+	if configuration.Timeout != 120 {
+		t.Error("Expecting '120' for Timeout, got ", configuration.Timeout)
 	}
 
-	if options.SkipExistingFiles {
+	if configuration.SkipExistingFiles {
 		t.Error("Expecting 'false' for SkipExistingFiles, got 'true'")
 	}
 }

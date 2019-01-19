@@ -69,7 +69,7 @@ func TestGenerateTimeFrames(t *testing.T) {
 	var testGenerateTimeFrames = func(from, to Timestamp, chunkSize Duration, expected int) {
 		period := Period{
 			TimeFrame: TimeFrame{from, to},
-			ChunkSize:  chunkSize,
+			ChunkSize: chunkSize,
 		}
 
 		l := len(GenerateTimeFrames(period))

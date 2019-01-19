@@ -11,8 +11,8 @@ func main() {
 	configFile := os.Args[1]
 
 	fmt.Println("Load", configFile)
+	configuration := crawl.LoadConfigurationFromJSONFile(configFile)
 
-	options := crawl.LoadConfigurationFromJSONFile(configFile)
-
-	crawl.Run(options, gerrit.Feed, gerrit.PostProcess)
+	fmt.Printf("Start crawl run with %v parallel requests", configuration.ParallelRequests)
+	crawl.Run(configuration, gerrit.Feed, gerrit.PostProcess)
 }
