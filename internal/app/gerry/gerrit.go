@@ -57,7 +57,7 @@ var Feed crawl.Feed = func(options crawl.Configuration, client http.Client, repo
 					id := fmt.Sprintf("%v", change.Number)
 
 					urlConfiguration := baseConfigurationDetail
-
+					
 					if changeHasRevision(id, options.URL, client) {
 						urlConfiguration += "&o=ALL_REVISIONS"
 					}
@@ -86,7 +86,7 @@ var Feed crawl.Feed = func(options crawl.Configuration, client http.Client, repo
 			}
 			elapsed_time := time.Since(start)
 			progress := float64(i+1) / float64(size)
-			remaining_time := time.Duration(elapsed_time.Seconds() / progress * float64(time.Second))
+			remaining_time := time.Duration(elapsed_time.Seconds() / progress * float64(time.Second)) - elapsed_time
 
 			fmt.Printf("\r%v/%v (%.2f %%) [%v | %v]", i+1, size, progress * 100.0, elapsed_time.Round(time.Second), remaining_time.Round(time.Second))
 		}
