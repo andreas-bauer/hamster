@@ -30,19 +30,20 @@ func NewClient(timeOut, maxRetries uint, logFile *os.File) Client {
 
 func (client Client) Get(url string) ([]byte, error) {
 	retryAttempt := uint(0)
+	startTime := time.Now()
 	for {
 		wait := 2 << uint(retryAttempt)
 		response, err := client.hc.Get(url)
 		if err != nil {
-			client.log(timeout, 408, retryAttempt, url)
+			client.log(timeout, 408, retryAttempt, url, startTime)
 		} else {
 			defer response.Body.Close()
 
 			if response.StatusCode == http.StatusOK && response.Body != nil {
-				client.log(success, response.StatusCode, retryAttempt, url)
+				client.log(success, response.StatusCode, retryAttempt, url, startTime)
 				return ioutil.ReadAll(response.Body)
 			} else {
-				client.log(retry, response.StatusCode, retryAttempt, url)
+				client.log(retry, response.StatusCode, retryAttempt, url, startTime)
 
 				header := response.Header.Get("Retry-After")
 				if len(header) > 0 {
@@ -58,8 +59,8 @@ func (client Client) Get(url string) ([]byte, error) {
 			time.Sleep(time.Duration(wait) * time.Second)
 			retryAttempt = retryAttempt + 1
 		} else {
-			client.log(failure, response.StatusCode, retryAttempt, url)
-			return nil, ErrMaxRetries
+			client.log(failure, response.StatusCode, retryAttempt, url, startTime)
+			return []byte{}, ErrMaxRetries
 		}
 	}
 }
@@ -83,13 +84,13 @@ const (
 	timeout status = "TIMEOUT"
 )
 
-func (client Client) log(status status, httpStatus int, retryAttempt uint, url string) {
+func (client Client) log(status status, httpStatus int, retryAttempt uint, url string, start time.Time) {
 	timestamp := time.Now()
 	status_string := string(status)
 	if status == retry {
 		status_string = fmt.Sprintf("%v %v", status_string, retryAttempt)
 	}
-	str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), status_string, httpStatus, url)
+	str := fmt.Sprintf("%v\t%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), status_string, httpStatus, url, time.Since(start).String())
 	_, err := client.logFile.WriteString(str)
 	if err != nil {
 		panic(err)
