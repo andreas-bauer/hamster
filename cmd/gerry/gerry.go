@@ -13,6 +13,5 @@ func main() {
 	fmt.Println("Load", configFile)
 	configuration := crawl.LoadConfigurationFromJSONFile(configFile)
 
-	fmt.Printf("Start crawl run with %v parallel requests", configuration.ParallelRequests)
 	crawl.Run(configuration, gerrit.Feed, gerrit.PostProcess)
 }
