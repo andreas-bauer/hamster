@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/michaeldorner/Gerry.svg)](https://travis-ci.org/michaeldorner/Gerry) 
-[![codecov](https://codecov.io/gh/michaeldorner/Gerry/branch/master/graph/badge.svg)](https://codecov.io/gh/michaeldorner/Gerry)
+[![Build Status](https://travis-ci.org/michaeldorner/hamster.svg)](https://travis-ci.org/michaeldorner/hamster) 
+[![codecov](https://codecov.io/gh/michaeldorner/hamster/branch/master/graph/badge.svg)](https://codecov.io/gh/michaeldorner/hamster)
 [![codebeat badge](https://codebeat.co/badges/f8306b22-3837-4244-a637-e880c6532700)](https://codebeat.co/projects/github-com-michaeldorner-gerry-master)
 ![license](https://img.shields.io/github/license/mashape/apistatus.svg)
 
