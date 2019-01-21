@@ -22,26 +22,6 @@
 
 ## Usage
 
-    python gerry.py <gerrit_instance> [--directory=<storage_directory>]
-    
-* `<gerrit_instances>`: Gerry supports the gerrit instances of OpenStack (`openstack`), Chromium (`chromium`), Gerrit (`gerrit`), Android ('android'), Go (`golang`), LibreOffice (`libreoffice`), Eclipse (`eclipse`), Wikimedia (`wikimedia`), and ONAP (`onap`). 
-* `<storage_directory>` (optional): The storage directory where to store the files (default `./gerry_data/`).
-
-
-## Contributions
-
-### To-do
-
-It would be great to get a pull request containing new instances or adding the option to add own (private, non-open-source) instances. 
-
-Other pull requests are always welcome. 
-
-
-### Acknowledgements
-
-Many thanks to my excellent master student [Jonathan Frieß](https://github.com/FreezerJohn), who added the full test setup. 
-
-
 ## License 
 
 Gerry is released under the MIT license. See [LICENSE](LICENSE) for more details.
