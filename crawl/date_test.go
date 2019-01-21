@@ -89,5 +89,13 @@ func TestTimestampToString(t *testing.T) {
 	if ts.String() != "2018-01-01 00:00:00.000" {
 		t.Error("Expected '2018-01-01 00:00:00.000', got", ts.String())
 	}
+}
 
+func TestLastTimestampForChunkSize(t *testing.T) {
+	ts := parseTimestamp("2018-01-01 00:00:00.000", t)
+	chunkSize := parseDuration("24h", t)
+	tsLast := ts.LastTimestampForChunkSize(chunkSize)
+	if tsLast.String() != "2018-01-01 23:59:59.999" {
+		t.Error("Expected '2018-01-01 23:59:59.999', got", tsLast.String())
+	}
 }

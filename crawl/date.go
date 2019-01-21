@@ -88,6 +88,6 @@ func (ts *Timestamp) String() string {
 	return ts.Time.Format(stringLayout)
 }
 
-func (ts Timestamp) LastTimestampForChunkSize(duration Duration) Timestamp {
-	return Timestamp{ts.Time.Add(duration.Duration).Add(-1 * time.Millisecond)}
+func (ts Timestamp) LastTimestampForChunkSize(chunkSize Duration) Timestamp {
+	return Timestamp{ts.Time.Add(chunkSize.Duration).Add(-1 * time.Millisecond)}
 }
