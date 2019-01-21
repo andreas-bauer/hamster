@@ -1,10 +1,11 @@
 package crawl
 
 import (
-	"github.com/michaeldorner/hamster/pkg/http"
-	"github.com/michaeldorner/hamster/pkg/store"
 	"sync"
 	"os"
+
+	"github.com/michaeldorner/hamster/http"
+	"github.com/michaeldorner/hamster/store"
 )
 
 type Feed func(Configuration, http.Client, store.Repository) <-chan Item
