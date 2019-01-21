@@ -5,23 +5,18 @@ import (
 	"io/ioutil"
 )
 
-const (
-	DefaultTimeout          uint = 120
-	DefaultMaxRetryAttempts uint = 5
-)
-
 type Configuration struct {
-	URL               string `json:"url,omitempty"`
-	Period            Period `json:"period,omitempty"`
-	OutDir            string `json:"outDir,omitempty"`
-	MaxRetryAttempts  uint   `json:"maxRetryAttempts,omitempty"`
-	Timeout           uint   `json:"timeout,omitempty"`
-	SkipExistingFiles bool   `json:"skipExistingFiles,omitempty"`
-	ParallelRequests uint   `json:"parallelRequests,omitempty"`
+	URL               string `json:"url"`
+	Period            Period `json:"period"`
+	OutDir            string `json:"outDir"`
+	MaxRetryAttempts  uint   `json:"maxRetryAttempts"`
+	Timeout           uint   `json:"timeout"`
+	SkipExistingFiles bool   `json:"skipExistingFiles"`
+	ParallelRequests  uint   `json:"parallelRequests"`
 }
 
 func (configuration Configuration) JSON() []byte {
-	data, err := json.MarshalIndent(configuration, "", "    ")
+	data, err := json.MarshalIndent(configuration, "", "\t")
 	if err != nil {
 		panic(err)
 	} else {

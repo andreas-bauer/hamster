@@ -1,8 +1,8 @@
 package crawl
 
 import (
-	"sync"
 	"os"
+	"sync"
 
 	"github.com/michaeldorner/hamster/http"
 	"github.com/michaeldorner/hamster/store"
@@ -47,10 +47,9 @@ func filter(options Configuration, repository store.Repository, in <-chan Item) 
 	return out
 }
 
-
 func getPayload(client http.Client, in <-chan Item, numParallelRequests uint, logFile *os.File) <-chan Item {
 	out := make(chan Item)
-	
+
 	go func() {
 		log := make(chan string)
 

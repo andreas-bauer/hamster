@@ -62,7 +62,6 @@ func (client Client) Get(url string, logChan chan string) ([]byte, error) {
 	}
 }
 
-
 func (client Client) GetHTTPStatus(url string) (int, error) {
 	response, err := client.hc.Get(url)
 	if err != nil {
@@ -90,5 +89,5 @@ func logToChan(logChan chan string, status status, httpStatus int, retryAttempt 
 		}
 		str := fmt.Sprintf("%v\t%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), status_string, httpStatus, url, time.Since(start).String())
 		logChan <- str
-	}	
+	}
 }
