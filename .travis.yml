@@ -5,9 +5,6 @@ sudo: true
 go:
   - "1.10"
 
-before_install:
-  - go get -t -v  ./...
-
 script:
   - go test -coverprofile=coverage.txt -covermode=atomic -v ./...
 
