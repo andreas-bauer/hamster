@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/michaeldorner/hamster.svg)](https://travis-ci.org/michaeldorner/hamster) 
 [![codecov](https://codecov.io/gh/michaeldorner/hamster/branch/master/graph/badge.svg)](https://codecov.io/gh/michaeldorner/hamster)
-[![codebeat badge](https://codebeat.co/badges/f8306b22-3837-4244-a637-e880c6532700)](https://codebeat.co/projects/github-com-michaeldorner-gerry-master)
+[![codebeat badge](https://codebeat.co/badges/e43b0b18-699e-4079-bba5-50cc66228a1a)](https://codebeat.co/projects/github-com-michaeldorner-hamster-master)
 ![license](https://img.shields.io/github/license/mashape/apistatus.svg)
 
 # Hamster
