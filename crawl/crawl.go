@@ -1,7 +1,6 @@
 package crawl
 
 import (
-	"os"
 	"sync"
 
 	"github.com/michaeldorner/hamster/http"
@@ -11,21 +10,32 @@ import (
 type Feed func(Configuration, http.Client, store.Repository) <-chan Item
 type PostProcess func(Configuration, http.Client, <-chan Item) <-chan Item
 
-func Run(options Configuration, feed Feed, postProcess PostProcess) {
-	repository := store.NewRepository(options.OutDir)
+func Run(config Configuration, feed Feed, postProcess PostProcess) {
+	repository := store.NewRepository(config.OutDir)
 
-	client := http.NewClient(options.Timeout, options.MaxRetryAttempts)
+	log := make(chan string) 
+	logFile := repository.LogFile()
+	go func() {
+		for logItem := range log {
+			logFile.WriteString(logItem)
+		}
+	}()
 
-	storeConfiguration(options, repository)
-	afterFeed := feed(options, client, repository)
-	afterFilter := filter(options, repository, afterFeed)
-	afterPayload := getPayload(client, afterFilter, options.ParallelRequests, repository.LogFile())
-	afterPostProcess := postProcess(options, client, afterPayload)
-	persist(repository, afterPostProcess)
+	client := http.NewClient(config.Timeout, config.MaxRetryAttempts, log)
+
+	storeConfiguration(config, repository)
+	afterFeed := feed(config, client, repository)
+	afterFilter := filter(config, repository, afterFeed)
+	afterPayload := getPayload(client, afterFilter, config.ParallelRequests)
+	afterPostProcess := postProcess(config, client, afterPayload)
+	afterPersist := persist(repository, afterPostProcess)
+
+	<- afterPersist
+	close(log)
 }
 
-func storeConfiguration(options Configuration, repository store.Repository) {
-	jsonData := options.JSON()
+func storeConfiguration(config Configuration, repository store.Repository) {
+	jsonData := config.JSON()
 	path := repository.ConfigurationFilePath()
 	err := repository.Store(path, jsonData)
 	if err != nil {
@@ -33,13 +43,13 @@ func storeConfiguration(options Configuration, repository store.Repository) {
 	}
 }
 
-func filter(options Configuration, repository store.Repository, in <-chan Item) <-chan Item {
+func filter(config Configuration, repository store.Repository, in <-chan Item) <-chan Item {
 	out := make(chan Item)
 	go func() {
 		defer close(out)
 		for item := range in {
 			path := repository.AppendDataPath(item.FileName())
-			if !(options.SkipExistingFiles && repository.FileExists(path)) {
+			if !(config.SkipExistingFiles && repository.FileExists(path)) {
 				out <- item
 			}
 		}
@@ -47,21 +57,18 @@ func filter(options Configuration, repository store.Repository, in <-chan Item) 
 	return out
 }
 
-func getPayload(client http.Client, in <-chan Item, numParallelRequests uint, logFile *os.File) <-chan Item {
+func getPayload(client http.Client, in <-chan Item, numParallelRequests uint) <-chan Item {
 	out := make(chan Item)
 
 	go func() {
-		log := make(chan string)
-
-		var dowloadWaitGroup sync.WaitGroup
-		var logWaitGroup sync.WaitGroup
+		var parallelWaitGroup sync.WaitGroup
 
 		for i := uint(0); i < numParallelRequests; i++ {
-			dowloadWaitGroup.Add(1)
+			parallelWaitGroup.Add(1)
 			go func() {
-				defer dowloadWaitGroup.Done()
+				defer parallelWaitGroup.Done()
 				for item := range in {
-					payload, err := client.Get(item.URL, log)
+					payload, err := client.Get(item.URL)
 					if err != nil {
 						panic(err)
 					} else {
@@ -71,27 +78,23 @@ func getPayload(client http.Client, in <-chan Item, numParallelRequests uint, lo
 				}
 			}()
 		}
-		logWaitGroup.Add(1)
-		go func() {
-			for logItem := range log {
-				logFile.WriteString(logItem)
-			}
-			logWaitGroup.Done()
-		}()
-		dowloadWaitGroup.Wait()
+		parallelWaitGroup.Wait()
 		close(out)
-		close(log)
-		logWaitGroup.Wait()
 	}()
 	return out
 }
 
-func persist(repository store.Repository, in <-chan Item) {
-	for item := range in {
-		file_path := repository.AppendDataPath(item.FileName())
-		err := repository.Store(file_path, item.Payload)
-		if err != nil {
-			panic(err)
+func persist(repository store.Repository, in <-chan Item) chan bool {
+	done := make(chan bool)
+	go func() {
+		for item := range in {
+			file_path := repository.AppendDataPath(item.FileName())
+			err := repository.Store(file_path, item.Payload)
+			if err != nil {
+				panic(err)
+			}
 		}
-	}
+		close(done)
+	}()
+	return done
 }
