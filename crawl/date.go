@@ -2,7 +2,6 @@ package crawl
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
 )
 
@@ -46,24 +45,16 @@ func (d Duration) MarshalJSON() ([]byte, error) {
 }
 
 func (d *Duration) UnmarshalJSON(b []byte) error {
-	var v interface{}
-	if err := json.Unmarshal(b, &v); err != nil {
+	var value string
+	if err := json.Unmarshal(b, &value); err != nil {
 		return err
 	}
-	switch value := v.(type) {
-	case float64:
-		d.Duration = time.Duration(value)
-		return nil
-	case string:
-		var err error
-		d.Duration, err = time.ParseDuration(value)
-		if err != nil {
-			return err
-		}
-		return nil
-	default:
-		return errors.New("invalid duration")
+	var err error
+	d.Duration, err = time.ParseDuration(value)
+	if err != nil {
+		return err
 	}
+	return nil
 }
 
 const stringLayout = "2006-01-02 15:04:05.000"

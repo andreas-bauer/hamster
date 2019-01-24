@@ -99,3 +99,12 @@ func TestLastTimestampForChunkSize(t *testing.T) {
 		t.Error("Expected '2018-01-01 23:59:59.999', got", tsLast.String())
 	}
 }
+
+func TestUnmarshalJSON(t *testing.T) {
+	duration1d := parseDuration("24h", t)
+	d := Duration{}
+	d.UnmarshalJSON([]byte("\"24h\""))
+	if d.Duration != duration1d.Duration {
+		t.Errorf("Expected 24h, got %v\n", d.Duration)
+	}
+}
