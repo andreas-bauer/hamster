@@ -35,11 +35,14 @@ func Run(config Configuration, feed Feed, postProcess PostProcess) {
 }
 
 func storeConfiguration(config Configuration, repository store.Repository) {
-	jsonData := config.JSON()
+	jsonData, jsonErr := config.JSON()
+	if jsonErr != nil {
+		panic(jsonErr)
+	}
 	path := repository.ConfigurationFilePath()
-	err := repository.Store(path, jsonData)
-	if err != nil {
-		panic(err)
+	storeErr := repository.Store(path, jsonData)
+	if storeErr != nil {
+		panic(storeErr)
 	}
 }
 

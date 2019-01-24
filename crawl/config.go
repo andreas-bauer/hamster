@@ -14,13 +14,8 @@ type Configuration struct {
 	ParallelRequests  uint   `json:"parallelRequests"`
 }
 
-func (configuration Configuration) JSON() []byte {
-	data, err := json.MarshalIndent(configuration, "", "\t")
-	if err != nil {
-		panic(err)
-	} else {
-		return data
-	}
+func (configuration Configuration) JSON() ([]byte, error) {
+	return json.MarshalIndent(configuration, "", "\t")
 }
 
 func UnmarshalConfiguration(jsonData []byte) (Configuration, error) {
