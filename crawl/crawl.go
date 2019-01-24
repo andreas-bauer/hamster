@@ -13,7 +13,7 @@ type PostProcess func(Configuration, http.Client, <-chan Item) <-chan Item
 func Run(config Configuration, feed Feed, postProcess PostProcess) {
 	repository := store.NewRepository(config.OutDir)
 
-	log := make(chan string) 
+	log := make(chan string)
 	logFile := repository.LogFile()
 	go func() {
 		for logItem := range log {
@@ -30,7 +30,7 @@ func Run(config Configuration, feed Feed, postProcess PostProcess) {
 	afterPostProcess := postProcess(config, client, afterPayload)
 	afterPersist := persist(repository, afterPostProcess)
 
-	<- afterPersist
+	<-afterPersist
 	close(log)
 }
 
