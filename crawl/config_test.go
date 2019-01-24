@@ -68,7 +68,12 @@ func TestJSON(t *testing.T) {
 	}
 
 	compactedBuffer := new(bytes.Buffer)
-	err = json.Compact(compactedBuffer, configuration.JSON())
+	jsonData, err := configuration.JSON()
+	if err != nil {
+		t.Error("Configuration JSON marshal error", err)
+	}
+
+	err = json.Compact(compactedBuffer, jsonData)
 	if err != nil {
 		t.Error("JSON compact error", err)
 	}
