@@ -2,7 +2,6 @@ package crawl
 
 import (
 	"encoding/json"
-	"io/ioutil"
 )
 
 type Configuration struct {
@@ -24,15 +23,8 @@ func (configuration Configuration) JSON() []byte {
 	}
 }
 
-func LoadConfigurationFromJSONFile(configurationFilePath string) Configuration {
-	jsonData, err := ioutil.ReadFile(configurationFilePath)
-	if err != nil {
-		panic(err)
-	}
+func UnmarshalConfiguration(jsonData []byte) (Configuration, error) {
 	var configuration Configuration
-	if err := json.Unmarshal(jsonData, &configuration); err != nil {
-		panic(err)
-	}
-
-	return configuration
+	err := json.Unmarshal(jsonData, &configuration)
+	return configuration, err
 }

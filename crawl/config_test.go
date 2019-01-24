@@ -20,7 +20,7 @@ var configurationJSONData = `{
 	"parallelRequests": 2
 }`
 
-func TestUnmarshalConfiguration(t *testing.T) {
+func TestUnmarshal(t *testing.T) {
 	configuration := Configuration{}
 	err := json.Unmarshal([]byte(configurationJSONData), &configuration)
 	if err != nil {
@@ -44,6 +44,13 @@ func TestUnmarshalConfiguration(t *testing.T) {
 
 	if configuration.ParallelRequests != 2 {
 		t.Error("Expecting 2 for ParallelRequests, got", configuration.ParallelRequests)
+	}
+}
+
+func TestUnmarshalConfiguration(t *testing.T) {
+	_, err := UnmarshalConfiguration([]byte(configurationJSONData))
+	if err != nil {
+		t.Error("Configuration Unmarshal error", err)
 	}
 }
 
