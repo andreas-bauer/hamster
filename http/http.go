@@ -14,7 +14,7 @@ var ErrMaxRetries = errors.New("error reached max retries")
 type Client struct {
 	hc         http.Client
 	maxRetries uint
-	logChan	chan string
+	logChan    chan string
 }
 
 func NewClient(timeOut, maxRetries uint, logChan chan string) Client {
@@ -23,7 +23,7 @@ func NewClient(timeOut, maxRetries uint, logChan chan string) Client {
 			Timeout: time.Duration(timeOut) * time.Second,
 		},
 		maxRetries: maxRetries,
-		logChan: logChan,
+		logChan:    logChan,
 	}
 }
 
