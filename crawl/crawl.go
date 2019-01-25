@@ -13,15 +13,7 @@ type PostProcess func(Configuration, http.Client, <-chan Item) <-chan Item
 func Run(config Configuration, feed Feed, postProcess PostProcess) {
 	repository := store.NewRepository(config.OutDir)
 
-	log := make(chan string)
-	logFile := repository.LogFile()
-	go func() {
-		for logItem := range log {
-			logFile.WriteString(logItem)
-		}
-	}()
-
-	client := http.NewClient(config.Timeout, config.MaxRetryAttempts, log)
+	client := http.NewClient(config.Timeout, config.MaxRetryAttempts, repository.LogFile())
 
 	storeConfiguration(config, repository)
 	afterFeed := feed(config, client, repository)
@@ -31,7 +23,6 @@ func Run(config Configuration, feed Feed, postProcess PostProcess) {
 	afterPersist := persist(repository, afterPostProcess)
 
 	<-afterPersist
-	close(log)
 }
 
 func storeConfiguration(config Configuration, repository store.Repository) {
@@ -71,11 +62,9 @@ func getPayload(client http.Client, in <-chan Item, numParallelRequests uint) <-
 			go func() {
 				defer parallelWaitGroup.Done()
 				for item := range in {
-					payload, err := client.Get(item.URL)
-					if err != nil {
-						panic(err)
-					} else {
-						item.Payload = payload
+					response := client.Get(item.URL)
+					if response.StatusCode == 200 {
+						item.Payload = response.Payload
 						out <- item
 					}
 				}
@@ -83,6 +72,7 @@ func getPayload(client http.Client, in <-chan Item, numParallelRequests uint) <-
 		}
 		parallelWaitGroup.Wait()
 		close(out)
+		client.Close()
 	}()
 	return out
 }

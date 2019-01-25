@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -14,80 +15,91 @@ var ErrMaxRetries = errors.New("error reached max retries")
 type Client struct {
 	hc         http.Client
 	maxRetries uint
-	logChan    chan string
+	LogC       chan ResponseMeta
 }
 
-func NewClient(timeOut, maxRetries uint, logChan chan string) Client {
-	return Client{
+func NewClient(timeOut, maxRetries uint, w io.Writer) Client {
+	c := Client{
 		hc: http.Client{
 			Timeout: time.Duration(timeOut) * time.Second,
 		},
 		maxRetries: maxRetries,
-		logChan:    logChan,
+		LogC:       make(chan ResponseMeta),
 	}
+	go func() {
+		for responseMeta := range c.LogC {
+			timestamp := time.Now()
+			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), responseMeta.StatusCode, responseMeta.URL, responseMeta.After.String())
+			w.Write([]byte(str))
+		}
+	}()
+	return c
 }
 
-func (client Client) Get(url string) ([]byte, error) {
-	retryAttempt := uint(0)
-	startTime := time.Now()
-	for {
-		wait := 2 << uint(retryAttempt)
-		response, err := client.hc.Get(url)
-		if err != nil {
-			client.log(timeout, 408, retryAttempt, url, startTime)
-		} else {
-			defer response.Body.Close()
+func (client Client) Close() {
+	close(client.LogC)
+}
 
-			if response.StatusCode == http.StatusOK && response.Body != nil {
-				client.log(success, response.StatusCode, retryAttempt, url, startTime)
-				return ioutil.ReadAll(response.Body)
-			} else {
-				client.log(retry, response.StatusCode, retryAttempt, url, startTime)
+type ResponseMeta struct {
+	StatusCode int
+	After      time.Duration
+	Retries    uint
+	URL        string
+}
 
-				header := response.Header.Get("Retry-After")
-				if len(header) > 0 {
-					parsedInt, parseErr := strconv.Atoi(header)
-					if parseErr != nil {
-						wait = parsedInt
-					}
+type Response struct {
+	ResponseMeta
+	Payload []byte
+}
+
+func (client Client) Get(url string) Response {
+	response := Response{}
+	response.URL = url
+	response.StatusCode = 444
+
+	defer func() {
+		client.LogC <- response.ResponseMeta
+	}()
+
+	retryAfter := 0
+	for retry := uint(0); retry < client.maxRetries; retry++ {
+		time.Sleep(time.Duration(retryAfter) * time.Second)
+		retryAfter = 2 << retry
+
+		startTime := time.Now()
+		r, err := client.hc.Get(url)
+		response.After = time.Since(startTime)
+		response.Retries = retry
+		if err == nil {
+			response.StatusCode = r.StatusCode
+
+			header := r.Header.Get("Retry-After")
+			if len(header) > 0 {
+				parsedInt, parseErr := strconv.Atoi(header)
+				if parseErr != nil {
+					retryAfter = parsedInt
+				}
+			}
+			defer r.Body.Close()
+			if r.StatusCode == 200 {
+				data, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					panic(err)
+				} else {
+					response.Payload = data
+					return response
 				}
 			}
 		}
-
-		if retryAttempt <= client.maxRetries {
-			time.Sleep(time.Duration(wait) * time.Second)
-			retryAttempt = retryAttempt + 1
-		} else {
-			client.log(failure, response.StatusCode, retryAttempt, url, startTime)
-			return []byte{}, ErrMaxRetries
-		}
 	}
+	return response
 }
 
-func (client Client) GetHTTPStatus(url string) (int, error) {
+func (client Client) GetHTTPStatus(url string) int {
 	response, err := client.hc.Get(url)
 	if err != nil {
-		return 0, err
+		return 444
 	} else {
-		return response.StatusCode, err
+		return response.StatusCode
 	}
-}
-
-type status string
-
-const (
-	success status = "SUCCESS"
-	retry   status = "RETRY"
-	failure status = "FAILURE"
-	timeout status = "TIMEOUT"
-)
-
-func (client Client) log(status status, httpStatus int, retryAttempt uint, url string, start time.Time) {
-	timestamp := time.Now()
-	status_string := string(status)
-	if status == retry {
-		status_string = fmt.Sprintf("%v %v", status_string, retryAttempt)
-	}
-	str := fmt.Sprintf("%v\t%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), status_string, httpStatus, url, time.Since(start).String())
-	client.logChan <- str
 }
