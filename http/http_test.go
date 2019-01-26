@@ -28,7 +28,7 @@ func TestGet(t *testing.T) {
 	c := NewClient(5, 1, nil)
 	response := c.Get("https://httpbin.org/anything/123")
 	if len(response.Payload) < 1 {
-		t.Errorf("no expected payload for URL 'https://httpbin.org/anything/123'")
+		t.Errorf("no expected payload for 'https://httpbin.org/anything/123'")
 	}
 }
 
@@ -43,5 +43,14 @@ func TestRetry(t *testing.T) {
 }
 
 func TestLog(t *testing.T) {
+	url := "https://httpbin.org/anything/123"
+	log := make(chan LogEntry)
+	c := NewClient(5, 1, log)
+	c.Get(url)
+	l := <- log	
+	close(log)
 
+	if url != l.URL {
+		t.Errorf("Expected %v, got %v\n", url, l.URL)
+	}
 }
