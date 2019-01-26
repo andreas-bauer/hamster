@@ -1,43 +1,27 @@
 package http
 
 import (
-	"errors"
-	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-var ErrMaxRetries = errors.New("error reached max retries")
 
 type Client struct {
 	hc         http.Client
 	maxRetries uint
-	LogC       chan ResponseMeta
+	logChan chan ResponseMeta
 }
 
-func NewClient(timeOut, maxRetries uint, w io.Writer) Client {
-	c := Client{
+func NewClient(timeOut, maxRetries uint, lc chan ResponseMeta) Client {
+	return Client{
 		hc: http.Client{
 			Timeout: time.Duration(timeOut) * time.Second,
 		},
 		maxRetries: maxRetries,
-		LogC:       make(chan ResponseMeta),
+		logChan: lc,
 	}
-	go func() {
-		for responseMeta := range c.LogC {
-			timestamp := time.Now()
-			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), responseMeta.StatusCode, responseMeta.URL, responseMeta.After.String())
-			w.Write([]byte(str))
-		}
-	}()
-	return c
-}
-
-func (client Client) Close() {
-	close(client.LogC)
 }
 
 type ResponseMeta struct {
@@ -57,12 +41,14 @@ func (client Client) Get(url string) Response {
 	response.URL = url
 	response.StatusCode = 444
 
-	defer func() {
-		client.LogC <- response.ResponseMeta
+	defer func() { 
+		if client.logChan != nil {
+			client.logChan <- response.ResponseMeta
+		}
 	}()
 
 	retryAfter := 0
-	for retry := uint(0); retry < client.maxRetries; retry++ {
+	for retry := uint(0); retry <= client.maxRetries; retry++ {
 		time.Sleep(time.Duration(retryAfter) * time.Second)
 		retryAfter = 2 << retry
 
@@ -103,3 +89,13 @@ func (client Client) GetHTTPStatus(url string) int {
 		return response.StatusCode
 	}
 }
+
+
+/*
+timestamp := time.Now()
+str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), responseMeta.StatusCode, responseMeta.URL, responseMeta.After.String())
+
+client.logFileMutex.Lock()
+client.logFileWriter.Write([]byte(str))
+client.logFileMutex.Unlock()
+*/

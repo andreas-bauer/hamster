@@ -2,6 +2,8 @@ package crawl
 
 import (
 	"sync"
+	"time"
+	"fmt"
 
 	"github.com/michaeldorner/hamster/http"
 	"github.com/michaeldorner/hamster/store"
@@ -13,7 +15,21 @@ type PostProcess func(Configuration, http.Client, <-chan Item) <-chan Item
 func Run(config Configuration, feed Feed, postProcess PostProcess) {
 	repository := store.NewRepository(config.OutDir)
 
-	client := http.NewClient(config.Timeout, config.MaxRetryAttempts, repository.LogFile())
+	log := make(chan http.ResponseMeta)
+	
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		logFile := repository.LogFile()
+		for r := range log {
+			timestamp := time.Now()
+			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), r.StatusCode, r.URL, r.After.String())
+			logFile.WriteString(str)
+		}
+		wg.Done()
+	}()
+
+	client := http.NewClient(config.Timeout, config.MaxRetryAttempts, log)
 
 	storeConfiguration(config, repository)
 	afterFeed := feed(config, client, repository)
@@ -23,6 +39,8 @@ func Run(config Configuration, feed Feed, postProcess PostProcess) {
 	afterPersist := persist(repository, afterPostProcess)
 
 	<-afterPersist
+	close(log)
+	wg.Wait()
 }
 
 func storeConfiguration(config Configuration, repository store.Repository) {
@@ -72,7 +90,6 @@ func getPayload(client http.Client, in <-chan Item, numParallelRequests uint) <-
 		}
 		parallelWaitGroup.Wait()
 		close(out)
-		client.Close()
 	}()
 	return out
 }
