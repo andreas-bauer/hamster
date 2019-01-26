@@ -15,15 +15,15 @@ type PostProcess func(Configuration, http.Client, <-chan Item) <-chan Item
 func Run(config Configuration, feed Feed, postProcess PostProcess) {
 	repository := store.NewRepository(config.OutDir)
 
-	log := make(chan http.ResponseMeta)
+	log := make(chan http.LogEntry)
 	
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		logFile := repository.LogFile()
-		for r := range log {
+		for l := range log {
 			timestamp := time.Now()
-			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), r.StatusCode, r.URL, r.After.String())
+			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), l.StatusCode, l.URL, l.After.String())
 			logFile.WriteString(str)
 		}
 		wg.Done()

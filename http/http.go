@@ -11,10 +11,10 @@ import (
 type Client struct {
 	hc         http.Client
 	maxRetries uint
-	logChan chan ResponseMeta
+	logChan chan LogEntry
 }
 
-func NewClient(timeOut, maxRetries uint, lc chan ResponseMeta) Client {
+func NewClient(timeOut, maxRetries uint, lc chan LogEntry) Client {
 	return Client{
 		hc: http.Client{
 			Timeout: time.Duration(timeOut) * time.Second,
@@ -24,7 +24,7 @@ func NewClient(timeOut, maxRetries uint, lc chan ResponseMeta) Client {
 	}
 }
 
-type ResponseMeta struct {
+type LogEntry struct {
 	StatusCode int
 	After      time.Duration
 	Retries    uint
@@ -32,30 +32,32 @@ type ResponseMeta struct {
 }
 
 type Response struct {
-	ResponseMeta
+	LogEntry
 	Payload []byte
 }
 
 func (client Client) Get(url string) Response {
+	/*
+	log := func(r Response) { 
+		if client.logChan != nil {
+			client.logChan <- r.ResponseMeta
+		}
+	}*/
+
 	response := Response{}
 	response.URL = url
 	response.StatusCode = 444
 
-	defer func() { 
-		if client.logChan != nil {
-			client.logChan <- response.ResponseMeta
-		}
-	}()
-
 	retryAfter := 0
 	for retry := uint(0); retry <= client.maxRetries; retry++ {
+		response.Retries = retry
+
 		time.Sleep(time.Duration(retryAfter) * time.Second)
 		retryAfter = 2 << retry
-
 		startTime := time.Now()
 		r, err := client.hc.Get(url)
 		response.After = time.Since(startTime)
-		response.Retries = retry
+
 		if err == nil {
 			response.StatusCode = r.StatusCode
 
@@ -73,11 +75,20 @@ func (client Client) Get(url string) Response {
 					panic(err)
 				} else {
 					response.Payload = data
+					if client.logChan != nil {
+						go func() {
+							client.logChan <- response.LogEntry
+						}()
+					}
 					return response
 				}
 			}
 		}
 	}
+	if client.logChan != nil {
+		go func() {
+			client.logChan <- response.LogEntry
+		}()	}
 	return response
 }
 
