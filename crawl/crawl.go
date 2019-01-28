@@ -1,9 +1,9 @@
 package crawl
 
 import (
+	"fmt"
 	"sync"
 	"time"
-	"fmt"
 
 	"github.com/michaeldorner/hamster/http"
 	"github.com/michaeldorner/hamster/store"
@@ -16,7 +16,7 @@ func Run(config Configuration, feed Feed, postProcess PostProcess) {
 	repository := store.NewRepository(config.OutDir)
 
 	log := make(chan http.LogEntry)
-	
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {

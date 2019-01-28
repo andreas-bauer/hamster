@@ -7,11 +7,10 @@ import (
 	"time"
 )
 
-
 type Client struct {
 	hc         http.Client
 	maxRetries uint
-	logChan chan LogEntry
+	logChan    chan LogEntry
 }
 
 func NewClient(timeOut, maxRetries uint, lc chan LogEntry) Client {
@@ -20,7 +19,7 @@ func NewClient(timeOut, maxRetries uint, lc chan LogEntry) Client {
 			Timeout: time.Duration(timeOut) * time.Second,
 		},
 		maxRetries: maxRetries,
-		logChan: lc,
+		logChan:    lc,
 	}
 }
 
@@ -38,11 +37,11 @@ type Response struct {
 
 func (client Client) Get(url string) Response {
 	/*
-	log := func(r Response) { 
-		if client.logChan != nil {
-			client.logChan <- r.ResponseMeta
-		}
-	}*/
+		log := func(r Response) {
+			if client.logChan != nil {
+				client.logChan <- r.ResponseMeta
+			}
+		}*/
 
 	response := Response{}
 	response.URL = url
@@ -88,7 +87,8 @@ func (client Client) Get(url string) Response {
 	if client.logChan != nil {
 		go func() {
 			client.logChan <- response.LogEntry
-		}()	}
+		}()
+	}
 	return response
 }
 
@@ -100,7 +100,6 @@ func (client Client) GetHTTPStatus(url string) int {
 		return response.StatusCode
 	}
 }
-
 
 /*
 timestamp := time.Now()
