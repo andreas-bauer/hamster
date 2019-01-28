@@ -34,12 +34,12 @@ func (repository Repository) FileExists(path string) bool {
 	return !os.IsNotExist(err)
 }
 
-func (repository Repository) LogFilePath() string {
+func (repository Repository) logFilePath() string {
 	return filepath.Join(repository.outDir, "crawl.log")
 }
 
 func (repository Repository) LogFile() *os.File {
-	file, err := os.OpenFile(repository.LogFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
+	file, err := os.OpenFile(repository.logFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
