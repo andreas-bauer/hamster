@@ -24,7 +24,7 @@ func TestGetHTTPStatus(t *testing.T) {
 	wg.Wait()
 }
 
-func TestGet(t *testing.T) {
+func TestPayload(t *testing.T) {
 	c := NewClient(5, 1, nil)
 	response := c.Get("https://httpbin.org/anything/123")
 	if len(response.Payload) < 1 {
@@ -47,7 +47,7 @@ func TestLog(t *testing.T) {
 	log := make(chan LogEntry)
 	c := NewClient(5, 1, log)
 	c.Get(url)
-	l := <- log	
+	l := <-log
 	close(log)
 
 	if url != l.URL {
