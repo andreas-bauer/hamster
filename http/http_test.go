@@ -9,7 +9,15 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
+
+func TestNewClient(t *testing.T) {
+	c := NewClient(60, 5, nil)
+	if c.maxRetries != 5 || c.hc.Timeout != time.Duration(60)*time.Second {
+		t.Error("could not create new client")
+	}
+}
 
 func TestGetHTTPStatus(t *testing.T) {
 	mockHTTP := NewTestClient(func(req *http.Request) *http.Response {
@@ -95,10 +103,6 @@ func TestLog(t *testing.T) {
 		t.Errorf("Expected %v, got %v\n", url, l.URL)
 	}
 }
-
-/*
- * Test helpers
- */
 
 type RoundTripFunc func(req *http.Request) *http.Response
 
