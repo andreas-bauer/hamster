@@ -100,12 +100,3 @@ func (client Client) GetHTTPStatus(url string) int {
 		return response.StatusCode
 	}
 }
-
-/*
-timestamp := time.Now()
-str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), responseMeta.StatusCode, responseMeta.URL, responseMeta.After.String())
-
-client.logFileMutex.Lock()
-client.logFileWriter.Write([]byte(str))
-client.logFileMutex.Unlock()
-*/
