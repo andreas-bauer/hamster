@@ -4,6 +4,7 @@ go:
   - 1.11
 
 script:
+  - $(exit $(go fmt ./... | wc -l))
   - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 after_success:
