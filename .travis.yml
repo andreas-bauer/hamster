@@ -4,7 +4,7 @@ go:
   - 1.11
 
 script:
-  - $(exit $(go fmt ./... | wc -l))
+  - diff -u <(echo -n) <(gofmt -d ./)
   - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 after_success:
