@@ -1,11 +1,14 @@
 package http
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 )
+
+var UnexpectedPanicErr = errors.New("unexpected HTTP client panic occured")
 
 type Client struct {
 	hc         http.Client
@@ -54,7 +57,14 @@ func (client Client) Get(url string) Response {
 		time.Sleep(time.Duration(retryAfter) * time.Second)
 		retryAfter = 2 << retry
 		startTime := time.Now()
-		r, err := client.hc.Get(url)
+		r, err := func(url string) (resp *http.Response, err error) {
+			defer func() {
+				if r := recover(); r != nil {
+					resp, err = nil, UnexpectedPanicErr
+				}
+			}()
+			return client.hc.Get(url)
+		}(url)
 		response.After = time.Since(startTime)
 
 		if err == nil {
@@ -68,6 +78,7 @@ func (client Client) Get(url string) Response {
 				}
 			}
 			defer r.Body.Close()
+
 			if r.StatusCode == 200 {
 				data, err := ioutil.ReadAll(r.Body)
 				if err != nil {
