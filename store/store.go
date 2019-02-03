@@ -10,15 +10,11 @@ type Repository struct {
 	outDir string
 }
 
-func NewRepository(outDir string) Repository {
+func NewRepository(outDir string) (Repository, error) {
 	var repository Repository = Repository{
 		outDir: filepath.Clean(outDir),
 	}
-	err := os.MkdirAll(repository.AppendDataPath(""), os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-	return repository
+	return repository, os.MkdirAll(repository.AppendDataPath(""), os.ModePerm)
 }
 
 func (repository Repository) ConfigurationFilePath() string {
@@ -38,12 +34,8 @@ func (repository Repository) logFilePath() string {
 	return filepath.Join(repository.outDir, "crawl.log")
 }
 
-func (repository Repository) LogFile() *os.File {
-	file, err := os.OpenFile(repository.logFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-	return file
+func (repository Repository) LogFile() (*os.File, error) {
+	return os.OpenFile(repository.logFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 }
 
 func (repository Repository) Store(path string, payload []byte) error {

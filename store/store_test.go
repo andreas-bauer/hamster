@@ -8,9 +8,24 @@ import (
 	"testing"
 )
 
+var path string = filepath.Clean("./repository")
+
+func TestMain(m *testing.M) {
+	retCode := m.Run()
+	os.RemoveAll(path)
+	os.Exit(retCode)
+}
+
+func createTestRepository(t *testing.T) Repository {
+	repository, err := NewRepository(path)
+	if err != nil {
+		t.Error("repository could not be created")
+	}
+	return repository
+}
+
 func TestNewRepository(t *testing.T) {
-	path := filepath.Clean("./repository")
-	repository := NewRepository(path)
+	repository := createTestRepository(t)
 	_, err := os.Stat(filepath.Clean(path))
 	if os.IsNotExist(err) {
 		t.Error("repository has not been created")
@@ -21,8 +36,7 @@ func TestNewRepository(t *testing.T) {
 }
 
 func TestConfigurationFilePath(t *testing.T) {
-	path := filepath.Clean("./repository")
-	repository := NewRepository(path)
+	repository := createTestRepository(t)
 	configurationFilePath := filepath.Join(repository.outDir, "config.json")
 	if repository.ConfigurationFilePath() != configurationFilePath {
 		t.Errorf("Expected %v, got %v for ConfigurationFilePath\n", configurationFilePath, repository.ConfigurationFilePath())
@@ -30,8 +44,7 @@ func TestConfigurationFilePath(t *testing.T) {
 }
 
 func TestAppendDataPath(t *testing.T) {
-	path := filepath.Clean("./repository")
-	repository := NewRepository(path)
+	repository := createTestRepository(t)
 	dataDir := filepath.Join(repository.outDir, "data")
 	if repository.AppendDataPath("") != dataDir {
 		t.Errorf("Expected %v, got %v for ConfigurationFilePath\n", dataDir, repository.AppendDataPath(""))
@@ -39,8 +52,7 @@ func TestAppendDataPath(t *testing.T) {
 }
 
 func TestLogFile(t *testing.T) {
-	path := filepath.Clean("./repository")
-	repository := NewRepository(path)
+	repository := createTestRepository(t)
 	repository.LogFile()
 
 	if _, err := os.Stat(repository.logFilePath()); os.IsNotExist(err) {
@@ -49,9 +61,7 @@ func TestLogFile(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
-	path := filepath.Clean("./repository")
-	repository := NewRepository(path)
-
+	repository := createTestRepository(t)
 	b := []byte{0, 1, 2, 3, 4}
 	writeErr := repository.Store(repository.AppendDataPath("test"), b)
 	rb, readErr := ioutil.ReadFile(repository.AppendDataPath("test"))
@@ -66,8 +76,7 @@ func TestStore(t *testing.T) {
 }
 
 func TestFielExists(t *testing.T) {
-	path := filepath.Clean("./repository")
-	repository := NewRepository(path)
+	repository := createTestRepository(t)
 	repository.logFilePath()
 	testFilePath := repository.AppendDataPath("test")
 
