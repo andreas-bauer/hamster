@@ -37,7 +37,11 @@ func Run(config Configuration, feed Feed, postProcess PostProcess) error {
 
 	client := http.NewClient(config.Timeout, config.MaxRetryAttempts, log)
 
-	storeConfiguration(config, repository)
+	storeErr := storeConfiguration(config, repository)
+	if storeErr != nil {
+		return storeErr
+	}
+
 	afterFeed := feed(config, client, repository)
 	afterFilter := filter(config, repository, afterFeed)
 	afterPayload := getPayload(client, afterFilter, config.ParallelRequests)
@@ -50,16 +54,17 @@ func Run(config Configuration, feed Feed, postProcess PostProcess) error {
 	return err
 }
 
-func storeConfiguration(config Configuration, repository store.Repository) {
+func storeConfiguration(config Configuration, repository store.Repository) error {
 	jsonData, jsonErr := config.JSON()
 	if jsonErr != nil {
-		panic(jsonErr)
+		return jsonErr
 	}
 	path := repository.ConfigurationFilePath()
 	storeErr := repository.Store(path, jsonData)
 	if storeErr != nil {
-		panic(storeErr)
+		return storeErr
 	}
+	return nil
 }
 
 func filter(config Configuration, repository store.Repository, in <-chan Item) <-chan Item {
