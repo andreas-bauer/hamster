@@ -70,7 +70,7 @@ func TestRetry(t *testing.T) {
 		return &http.Response{
 			StatusCode: 501,
 			Body:       ioutil.NopCloser(bytes.NewBufferString(`Server Error`)),
-			Header:     make(http.Header),
+			Header:     http.Header{"Retry-After": []string{"1"}},
 		}
 	})
 
