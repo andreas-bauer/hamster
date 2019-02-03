@@ -10,6 +10,9 @@ var postProcess PostProcess = func(configuration Configuration, client http.Clie
 	items := make(chan Item)
 	go func() {
 		defer close(items)
+		for item := range in {
+			items <- item
+		}
 	}()
 	return items
 }
