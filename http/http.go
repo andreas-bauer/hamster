@@ -39,16 +39,17 @@ type Response struct {
 }
 
 func (client Client) Get(url string) Response {
-	/*
-		log := func(r Response) {
-			if client.logChan != nil {
-				client.logChan <- r.ResponseMeta
-			}
-		}*/
-
-	response := Response{}
-	response.URL = url
-	response.StatusCode = 444
+	response := Response{
+		LogEntry: LogEntry{
+			URL:        url,
+			StatusCode: 444,
+		},
+	}
+	defer func() {
+		if client.logChan != nil {
+			client.logChan <- response.LogEntry
+		}
+	}()
 
 	retryAfter := 0
 	for retry := uint(0); retry <= client.maxRetries; retry++ {
@@ -76,20 +77,10 @@ func (client Client) Get(url string) Response {
 				data, err := ioutil.ReadAll(r.Body)
 				if err == nil {
 					response.Payload = data
-					if client.logChan != nil {
-						go func() {
-							client.logChan <- response.LogEntry
-						}()
-					}
 					return response
 				}
 			}
 		}
-	}
-	if client.logChan != nil {
-		go func() {
-			client.logChan <- response.LogEntry
-		}()
 	}
 	return response
 }
