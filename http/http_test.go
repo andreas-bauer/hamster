@@ -83,7 +83,7 @@ func TestRetry(t *testing.T) {
 	}
 }
 
-func TestGetWithLog(t *testing.T) {
+func TestLog(t *testing.T) {
 	mockHTTP := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: 200,
@@ -95,7 +95,7 @@ func TestGetWithLog(t *testing.T) {
 	url := "https://mock/anything/123"
 	log := make(chan LogEntry)
 	c := Client{hc: *mockHTTP, maxRetries: 1, logChan: log}
-	c.Get(url)
+	go c.Get(url)
 	l := <-log
 	close(log)
 
