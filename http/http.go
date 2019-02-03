@@ -64,13 +64,11 @@ func (client Client) Get(url string) Response {
 		if err == nil {
 			response.StatusCode = r.StatusCode
 
-			header := r.Header.Get("Retry-After")
-			if len(header) > 0 {
-				parsedInt, parseErr := strconv.Atoi(header)
-				if parseErr != nil {
-					retryAfter = parsedInt
-				}
+			parsedInt, parseErr := strconv.Atoi(r.Header.Get("Retry-After"))
+			if parseErr != nil {
+				retryAfter = parsedInt
 			}
+
 			defer r.Body.Close()
 
 			if r.StatusCode == 200 {
