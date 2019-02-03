@@ -57,14 +57,7 @@ func (client Client) Get(url string) Response {
 		time.Sleep(time.Duration(retryAfter) * time.Second)
 		retryAfter = 2 << retry
 		startTime := time.Now()
-		r, err := func(url string) (resp *http.Response, err error) {
-			defer func() {
-				if r := recover(); r != nil {
-					resp, err = nil, UnexpectedPanicErr
-				}
-			}()
-			return client.hc.Get(url)
-		}(url)
+		r, err := client.hc.Get(url)
 		response.After = time.Since(startTime)
 
 		if err == nil {
@@ -81,9 +74,7 @@ func (client Client) Get(url string) Response {
 
 			if r.StatusCode == 200 {
 				data, err := ioutil.ReadAll(r.Body)
-				if err != nil {
-					panic(err)
-				} else {
+				if err == nil {
 					response.Payload = data
 					if client.logChan != nil {
 						go func() {
