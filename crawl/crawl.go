@@ -12,15 +12,21 @@ import (
 type Feed func(Configuration, http.Client, store.Repository) <-chan Item
 type PostProcess func(Configuration, http.Client, <-chan Item) <-chan Item
 
-func Run(config Configuration, feed Feed, postProcess PostProcess) {
-	repository := store.NewRepository(config.OutDir)
+func Run(config Configuration, feed Feed, postProcess PostProcess) error {
+	repository, err := store.NewRepository(config.OutDir)
+	if err != nil {
+		return err
+	}
 
 	log := make(chan http.LogEntry)
+	logFile, err := repository.LogFile()
+	if err != nil {
+		return err
+	}
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		logFile := repository.LogFile()
 		for l := range log {
 			timestamp := time.Now()
 			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), l.StatusCode, l.URL, l.After.String())
@@ -41,6 +47,7 @@ func Run(config Configuration, feed Feed, postProcess PostProcess) {
 	<-afterPersist
 	close(log)
 	wg.Wait()
+	return err
 }
 
 func storeConfiguration(config Configuration, repository store.Repository) {
