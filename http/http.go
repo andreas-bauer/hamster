@@ -62,14 +62,13 @@ func (client Client) Get(url string) Response {
 		response.After = time.Since(startTime)
 
 		if err == nil {
-			response.StatusCode = r.StatusCode
+			defer r.Body.Close()
 
+			response.StatusCode = r.StatusCode
 			parsedInt, parseErr := strconv.Atoi(r.Header.Get("Retry-After"))
 			if parseErr != nil {
 				retryAfter = parsedInt
 			}
-
-			defer r.Body.Close()
 
 			if r.StatusCode == 200 {
 				data, err := ioutil.ReadAll(r.Body)

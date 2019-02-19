@@ -2,6 +2,7 @@ package crawl
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 	"time"
 
@@ -23,6 +24,8 @@ func Run(config Configuration, feed Feed, postProcess PostProcess) error {
 	if err != nil {
 		return err
 	}
+
+	runtime.GOMAXPROCS(int(config.ParallelRequests))
 
 	var wg sync.WaitGroup
 	wg.Add(1)
