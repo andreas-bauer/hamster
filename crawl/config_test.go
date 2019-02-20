@@ -17,7 +17,6 @@ var configurationJSONData = `{
 	"outDir": "./android/",
 	"maxRetries": 10,
 	"timeout": "2m0s",
-	"skipExistingFiles": false,
 	"parallelRequests": 2
 }`
 
@@ -37,10 +36,6 @@ func TestUnmarshal(t *testing.T) {
 	dur := Duration{time.Duration(120) * time.Second}
 	if configuration.Timeout != dur {
 		t.Error("Expecting '2m' for Timeout, got", configuration.Timeout)
-	}
-
-	if configuration.SkipExistingFiles {
-		t.Error("Expecting 'false' for SkipExistingFiles, got 'true'")
 	}
 
 	if configuration.ParallelRequests != 2 {

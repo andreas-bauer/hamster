@@ -23,11 +23,10 @@ var feed Feed = func(Configuration, http.Client, *store.Repository) <-chan Item 
 
 func TestCrawl(t *testing.T) {
 	configuration := Configuration{
-		OutDir:            "./repository",
-		MaxRetries:        2,
-		Timeout:           Duration{time.Duration(10) * time.Second},
-		SkipExistingFiles: false,
-		ParallelRequests:  1,
+		OutDir:           "./repository",
+		MaxRetries:       2,
+		Timeout:          Duration{time.Duration(10) * time.Second},
+		ParallelRequests: 1,
 	}
 	Run(configuration, feed)
 	//check for file 1.json
