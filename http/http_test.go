@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	c := NewClient(60, 5, nil)
+	c := NewClient(time.Duration(60)*time.Second, 5)
 	if c.maxRetries != 5 || c.hc.Timeout != time.Duration(60)*time.Second {
 		t.Error("could not create new client")
 	}
@@ -31,7 +31,7 @@ func TestGetHTTPStatus(t *testing.T) {
 		}
 	})
 
-	c := Client{hc: *mockHTTP, maxRetries: 1, logChan: nil}
+	c := Client{hc: *mockHTTP, maxRetries: 1}
 	statusCodes := []int{200, 201, 202, 203, 204, 205, 206, 304, 307, 308, 400, 401, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 421, 426, 428, 429, 430, 431, 451, 500, 501, 502, 503, 504, 505} // 100, 101, 301, 302, 303 not tested
 	var wg sync.WaitGroup
 	for _, statusCode := range statusCodes {
@@ -57,7 +57,7 @@ func TestPayload(t *testing.T) {
 		}
 	})
 
-	c := Client{hc: *mockHTTP, maxRetries: 1, logChan: nil}
+	c := Client{hc: *mockHTTP, maxRetries: 1}
 	response := c.Get("https://mock/anything/123")
 
 	if len(response.Payload) != 12 {
@@ -74,33 +74,12 @@ func TestRetry(t *testing.T) {
 		}
 	})
 
-	retries := uint(1)
-	c := Client{hc: *mockHTTP, maxRetries: 1, logChan: nil}
+	retrys := uint(1)
+	c := Client{hc: *mockHTTP, maxRetries: 1}
 	response := c.Get("https://mock/status/501")
 
-	if response.Retries != retries {
-		t.Errorf("Expected %v retries, got %v\n", retries, response.Retries)
-	}
-}
-
-func TestLog(t *testing.T) {
-	mockHTTP := NewTestClient(func(req *http.Request) *http.Response {
-		return &http.Response{
-			StatusCode: 200,
-			Body:       ioutil.NopCloser(bytes.NewBufferString("OK")),
-			Header:     make(http.Header),
-		}
-	})
-
-	url := "https://mock/anything/123"
-	log := make(chan LogEntry)
-	c := Client{hc: *mockHTTP, maxRetries: 1, logChan: log}
-	go c.Get(url)
-	l := <-log
-	close(log)
-
-	if url != l.URL {
-		t.Errorf("Expected %v, got %v\n", url, l.URL)
+	if response.Attempts != retrys {
+		t.Errorf("Expected %v retrys, got %v\n", retrys, response.Attempts)
 	}
 }
 

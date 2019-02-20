@@ -3,8 +3,8 @@ package http
 import (
 	"errors"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -13,63 +13,43 @@ var UnexpectedPanicErr = errors.New("unexpected HTTP client panic occured")
 type Client struct {
 	hc         http.Client
 	maxRetries uint
-	logChan    chan LogEntry
 }
 
-func NewClient(timeOut, maxRetries uint, lc chan LogEntry) Client {
+func NewClient(timeOut time.Duration, maxRetries uint) Client {
 	return Client{
 		hc: http.Client{
-			Timeout: time.Duration(timeOut) * time.Second,
+			Timeout: time.Duration(timeOut),
 		},
 		maxRetries: maxRetries,
-		logChan:    lc,
 	}
-}
-
-type LogEntry struct {
-	StatusCode int
-	After      time.Duration
-	Retries    uint
-	URL        string
 }
 
 type Response struct {
-	LogEntry
-	Payload []byte
+	StatusCode  int
+	TimeToCrawl time.Duration
+	Attempts    uint
+	Payload     []byte
 }
 
 func (client Client) Get(url string) Response {
-	response := Response{
-		LogEntry: LogEntry{
-			URL:        url,
-			StatusCode: 444,
-		},
-	}
-	defer func() {
-		if client.logChan != nil {
-			client.logChan <- response.LogEntry
-		}
-	}()
+	response := Response{}
+	startTime := time.Now()
 
 	retryAfter := 0
 	for retry := uint(0); retry <= client.maxRetries; retry++ {
-		response.Retries = retry
-
-		time.Sleep(time.Duration(retryAfter) * time.Second)
+		response.Attempts = retry
+		if retry > 0 {
+			rand.Seed(time.Now().UnixNano())
+			jitter := (rand.Intn(10) + 1) * 100
+			time.Sleep(time.Duration(retryAfter)*time.Second + time.Duration(jitter)*time.Millisecond)
+		}
 		retryAfter = 2 << retry
-		startTime := time.Now()
 		r, err := client.hc.Get(url)
-		response.After = time.Since(startTime)
+		response.TimeToCrawl = time.Since(startTime)
 
 		if err == nil {
 			defer r.Body.Close()
-
 			response.StatusCode = r.StatusCode
-			parsedInt, parseErr := strconv.Atoi(r.Header.Get("Retry-After"))
-			if parseErr != nil {
-				retryAfter = parsedInt
-			}
-
 			if r.StatusCode == 200 {
 				data, err := ioutil.ReadAll(r.Body)
 				if err == nil {

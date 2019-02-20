@@ -5,13 +5,13 @@ import (
 )
 
 type Configuration struct {
-	URL               string `json:"url"`
-	Period            Period `json:"period"`
-	OutDir            string `json:"outDir"`
-	MaxRetryAttempts  uint   `json:"maxRetryAttempts"`
-	Timeout           uint   `json:"timeout"`
-	SkipExistingFiles bool   `json:"skipExistingFiles"`
-	ParallelRequests  uint   `json:"parallelRequests"`
+	URL               string   `json:"url"`
+	Period            Period   `json:"period"`
+	OutDir            string   `json:"outDir"`
+	MaxRetries        uint     `json:"maxRetries"`
+	Timeout           Duration `json:"timeout"`
+	SkipExistingFiles bool     `json:"skipExistingFiles"`
+	ParallelRequests  uint     `json:"parallelRequests"`
 }
 
 func (configuration Configuration) JSON() ([]byte, error) {

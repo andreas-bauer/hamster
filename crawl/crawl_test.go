@@ -3,21 +3,12 @@ package crawl
 import (
 	"github.com/michaeldorner/hamster/http"
 	"github.com/michaeldorner/hamster/store"
+	"os"
 	"testing"
+	"time"
 )
 
-var postProcess PostProcess = func(configuration Configuration, client http.Client, in <-chan Item) <-chan Item {
-	items := make(chan Item)
-	go func() {
-		defer close(items)
-		for item := range in {
-			items <- item
-		}
-	}()
-	return items
-}
-
-var feed Feed = func(Configuration, http.Client, store.Repository) <-chan Item {
+var feed Feed = func(Configuration, http.Client, *store.Repository) <-chan Item {
 	items := make(chan Item)
 	go func() {
 		defer close(items)
@@ -32,11 +23,13 @@ var feed Feed = func(Configuration, http.Client, store.Repository) <-chan Item {
 
 func TestCrawl(t *testing.T) {
 	configuration := Configuration{
-		OutDir:            "./",
-		MaxRetryAttempts:  2,
-		Timeout:           10,
+		OutDir:            "./repository",
+		MaxRetries:        2,
+		Timeout:           Duration{time.Duration(10) * time.Second},
 		SkipExistingFiles: false,
 		ParallelRequests:  1,
 	}
-	Run(configuration, feed, postProcess)
+	Run(configuration, feed)
+	//check for file 1.json
+	os.RemoveAll("./repository")
 }

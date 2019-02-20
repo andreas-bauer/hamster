@@ -1,9 +1,11 @@
 package crawl
 
+import "github.com/michaeldorner/hamster/http"
+
 type Item struct {
 	ID                 string
 	URL                string
-	Payload            []byte
+	Response           http.Response
 	FileNameExtensions string
 }
 

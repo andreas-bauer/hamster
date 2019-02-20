@@ -1,12 +1,15 @@
 package crawl
 
-import "testing"
+import (
+	"github.com/michaeldorner/hamster/http"
+	"testing"
+)
 
 func TestFileName(t *testing.T) {
 	item := Item{
 		ID:                 "0001",
 		URL:                "https://www.google.com",
-		Payload:            []byte("bytes"),
+		Response:           http.Response{},
 		FileNameExtensions: "json",
 	}
 	if item.FileName() != "0001.json" {

@@ -1,43 +1,51 @@
 package store
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
+var RepositoryNotEmpty = errors.New("the repository is not empty")
+
 type Repository struct {
 	outDir string
 }
 
-func NewRepository(outDir string) (Repository, error) {
-	var repository Repository = Repository{
+func NewRepository(outDir string) (*Repository, error) {
+	repository := &Repository{
 		outDir: filepath.Clean(outDir),
 	}
-	return repository, os.MkdirAll(repository.AppendDataPath(""), os.ModePerm)
+	_, err := os.Stat(filepath.Clean(outDir))
+	if !os.IsNotExist(err) {
+		return nil, RepositoryNotEmpty
+	} else {
+		return repository, os.MkdirAll(filepath.Join(repository.outDir, "data"), os.ModePerm)
+	}
 }
 
-func (repository Repository) ConfigurationFilePath() string {
+func (repository *Repository) ConfigurationFilePath() string {
 	return filepath.Join(repository.outDir, "config.json")
 }
 
-func (repository Repository) AppendDataPath(append string) string {
-	return filepath.Join(repository.outDir, "data", append)
+func (repository *Repository) LogFile() (*os.File, error) {
+	path := filepath.Join(repository.outDir, "log.log")
+	return os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 }
 
-func (repository Repository) FileExists(path string) bool {
-	_, err := os.Stat(filepath.Clean(path))
-	return !os.IsNotExist(err)
-}
-
-func (repository Repository) logFilePath() string {
-	return filepath.Join(repository.outDir, "crawl.log")
-}
-
-func (repository Repository) LogFile() (*os.File, error) {
-	return os.OpenFile(repository.logFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
-}
-
-func (repository Repository) Store(path string, payload []byte) error {
+func (repository *Repository) StoreItem(fileName string, payload []byte) error {
+	path := filepath.Join(repository.outDir, "data", fileName)
 	return ioutil.WriteFile(filepath.Clean(path), payload, os.ModePerm)
 }
+
+func (repository *Repository) StoreConfiguration(configurationData []byte) error {
+	path := filepath.Join(repository.outDir, "config.json")
+	return ioutil.WriteFile(filepath.Clean(path), configurationData, os.ModePerm)
+}
+
+/*
+func FileExists(path string) bool {
+	_, err := os.Stat(filepath.Clean(path))
+	return !os.IsNotExist(err)
+}*/

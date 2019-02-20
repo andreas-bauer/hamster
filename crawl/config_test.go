@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 )
 
 var configurationJSONData = `{
@@ -14,8 +15,8 @@ var configurationJSONData = `{
 		"chunkSize": "24h0m0s"
 	},
 	"outDir": "./android/",
-	"maxRetryAttempts": 10,
-	"timeout": 120,
+	"maxRetries": 10,
+	"timeout": "2m0s",
 	"skipExistingFiles": false,
 	"parallelRequests": 2
 }`
@@ -30,12 +31,12 @@ func TestUnmarshal(t *testing.T) {
 		t.Error("Expecting 'https://android-review.googlesource.com', got", configuration.URL)
 	}
 
-	if configuration.MaxRetryAttempts != 10 {
-		t.Error("Expecting '10' for MaxRetryAttempts, got ", configuration.MaxRetryAttempts)
+	if configuration.MaxRetries != 10 {
+		t.Error("Expecting '10' for MaxRetries, got ", configuration.MaxRetries)
 	}
-
-	if configuration.Timeout != 120 {
-		t.Error("Expecting '120' for Timeout, got", configuration.Timeout)
+	dur := Duration{time.Duration(120) * time.Second}
+	if configuration.Timeout != dur {
+		t.Error("Expecting '2m' for Timeout, got", configuration.Timeout)
 	}
 
 	if configuration.SkipExistingFiles {
