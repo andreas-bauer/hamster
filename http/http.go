@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"io/ioutil"
+	"math"
 	"math/rand"
 	"net/http"
 	"time"
@@ -27,7 +28,7 @@ func NewClient(timeOut time.Duration, maxRetries uint) Client {
 type Response struct {
 	StatusCode  int
 	TimeToCrawl time.Duration
-	Attempts    uint
+	Retries     uint
 	Payload     []byte
 }
 
@@ -35,15 +36,15 @@ func (client Client) Get(url string) Response {
 	response := Response{}
 	startTime := time.Now()
 
-	retryAfter := 0
 	for retry := uint(0); retry <= client.maxRetries; retry++ {
-		response.Attempts = retry
+		response.Retries = retry
 		if retry > 0 {
 			rand.Seed(time.Now().UnixNano())
-			jitter := (rand.Intn(10) + 1) * 100
-			time.Sleep(time.Duration(retryAfter)*time.Second + time.Duration(jitter)*time.Millisecond)
+			jitter := time.Duration(rand.Intn(500)) * time.Millisecond
+			backoff := time.Duration(math.Pow(2, float64(retry-1))) * time.Second
+			time.Sleep(backoff + jitter)
 		}
-		retryAfter = 2 << retry
+
 		r, err := client.hc.Get(url)
 		response.TimeToCrawl = time.Since(startTime)
 

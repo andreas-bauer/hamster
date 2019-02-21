@@ -78,8 +78,8 @@ func TestRetry(t *testing.T) {
 	c := Client{hc: *mockHTTP, maxRetries: 1}
 	response := c.Get("https://mock/status/501")
 
-	if response.Attempts != retrys {
-		t.Errorf("Expected %v retrys, got %v\n", retrys, response.Attempts)
+	if response.Retries != retrys {
+		t.Errorf("Expected %v retrys, got %v\n", retrys, response.Retries)
 	}
 }
 
