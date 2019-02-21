@@ -31,10 +31,3 @@ func TestNewRepository(t *testing.T) {
 		t.Errorf("Expected %v, got %v for outDir\n", path, repository.outDir)
 	}
 }
-
-func TestConfigurationFilePath(t *testing.T) {
-	configurationFilePath := filepath.Join(repository.outDir, "config.json")
-	if repository.ConfigurationFilePath() != configurationFilePath {
-		t.Errorf("Expected %v, got %v for ConfigurationFilePath\n", configurationFilePath, repository.ConfigurationFilePath())
-	}
-}

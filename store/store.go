@@ -25,10 +25,6 @@ func NewRepository(outDir string) (*Repository, error) {
 	}
 }
 
-func (repository *Repository) ConfigurationFilePath() string {
-	return filepath.Join(repository.outDir, "config.json")
-}
-
 func (repository *Repository) LogFile() (*os.File, error) {
 	path := filepath.Join(repository.outDir, "log.log")
 	return os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)

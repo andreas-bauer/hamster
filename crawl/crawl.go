@@ -38,18 +38,6 @@ func Run(config Configuration, feed Feed) error {
 	return err
 }
 
-func storeConfiguration(config Configuration, repository *store.Repository) error {
-	jsonData, jsonErr := config.JSON()
-	if jsonErr != nil {
-		return jsonErr
-	}
-	storeErr := repository.StoreConfiguration(jsonData)
-	if storeErr != nil {
-		return storeErr
-	}
-	return nil
-}
-
 func get(client http.Client, in <-chan Item, numParallelRequests uint) <-chan Item {
 	out := make(chan Item)
 
