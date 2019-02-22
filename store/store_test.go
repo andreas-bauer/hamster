@@ -37,6 +37,10 @@ func TestNewRepository(t *testing.T) {
 	if repository.outDir != filepath.Clean(path) {
 		t.Errorf("Expected %v, got %v for outDir\n", path, repository.outDir)
 	}
+	_, err := NewRepository(path)
+	if err != RepositoryNotEmpty {
+		t.Errorf("Expected error %v, got %v\n", RepositoryNotEmpty, err)
+	}
 }
 
 func TestLogFile(t *testing.T) {
