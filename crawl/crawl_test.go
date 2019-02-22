@@ -3,7 +3,9 @@ package crawl
 import (
 	"github.com/michaeldorner/hamster/http"
 	"github.com/michaeldorner/hamster/store"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -21,14 +23,23 @@ var feed Feed = func(Configuration, http.Client, *store.Repository) <-chan Item 
 	return items
 }
 
+var testConfiguration Configuration = Configuration{
+	OutDir:           "./repository",
+	MaxRetries:       2,
+	Timeout:          Duration{time.Duration(10) * time.Second},
+	ParallelRequests: 1,
+}
+
+func TestMain(m *testing.M) {
+	retCode := m.Run()
+	os.RemoveAll(testConfiguration.OutDir)
+	os.Exit(retCode)
+}
+
 func TestCrawl(t *testing.T) {
-	configuration := Configuration{
-		OutDir:           "./repository",
-		MaxRetries:       2,
-		Timeout:          Duration{time.Duration(10) * time.Second},
-		ParallelRequests: 1,
+	Run(testConfiguration, feed)
+	_, err := ioutil.ReadFile(filepath.Join(testConfiguration.OutDir, "data", "1.json"))
+	if err != nil {
+		t.Error(err)
 	}
-	Run(configuration, feed)
-	//check for file 1.json
-	os.RemoveAll("./repository")
 }
