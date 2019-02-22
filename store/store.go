@@ -26,22 +26,16 @@ func NewRepository(outDir string) (*Repository, error) {
 }
 
 func (repository *Repository) LogFile() (*os.File, error) {
-	path := filepath.Join(repository.outDir, "log.log")
+	path := filepath.Join(repository.outDir, "crawl.log")
 	return os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 }
 
-func (repository *Repository) StoreItem(fileName string, payload []byte) error {
+func (repository *Repository) StorePayload(fileName string, payload []byte) error {
 	path := filepath.Join(repository.outDir, "data", fileName)
 	return ioutil.WriteFile(filepath.Clean(path), payload, os.ModePerm)
 }
 
-func (repository *Repository) StoreConfiguration(configurationData []byte) error {
+func (repository *Repository) StoreConfigurationJSON(configurationData []byte) error {
 	path := filepath.Join(repository.outDir, "config.json")
 	return ioutil.WriteFile(filepath.Clean(path), configurationData, os.ModePerm)
 }
-
-/*
-func FileExists(path string) bool {
-	_, err := os.Stat(filepath.Clean(path))
-	return !os.IsNotExist(err)
-}*/

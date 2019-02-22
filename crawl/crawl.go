@@ -24,7 +24,7 @@ func Run(config Configuration, feed Feed) error {
 		return parseErr
 	}
 
-	storeErr := repository.StoreConfiguration(jsonData)
+	storeErr := repository.StoreConfigurationJSON(jsonData)
 	if storeErr != nil {
 		return storeErr
 	}
@@ -67,7 +67,7 @@ func persist(repository *store.Repository, in <-chan Item) <-chan Item {
 	out := make(chan Item)
 	go func() {
 		for item := range in {
-			err := repository.StoreItem(item.FileName(), item.Response.Payload)
+			err := repository.StorePayload(item.FileName(), item.Response.Payload)
 			if err != nil {
 				panic(err)
 			}
