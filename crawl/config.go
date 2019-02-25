@@ -5,12 +5,12 @@ import (
 )
 
 type Configuration struct {
-	URL              string   `json:"url"`
-	Period           Period   `json:"period"`
-	OutDir           string   `json:"outDir"`
-	MaxRetries       uint     `json:"maxRetries"`
-	Timeout          Duration `json:"timeout"`
-	ParallelRequests uint     `json:"parallelRequests"`
+	URL              string      `json:"url"`
+	Feed             interface{} `json:"feed"`
+	OutDir           string      `json:"outDir"`
+	MaxRetries       uint        `json:"maxRetries"`
+	Timeout          Duration    `json:"timeout"`
+	ParallelRequests uint        `json:"parallelRequests"`
 }
 
 func (configuration Configuration) JSON() ([]byte, error) {

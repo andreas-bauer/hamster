@@ -9,11 +9,7 @@ import (
 
 var configurationJSONData = `{
 	"url": "https://android-review.googlesource.com",
-	"period": {
-		"from": "2008-07-01 00:00:00.000", 
-		"to": "2018-12-31 00:00:00.000",
-		"chunkSize": "24h0m0s"
-	},
+	"feed": {},
 	"outDir": "./android/",
 	"maxRetries": 10,
 	"timeout": "2m0s",
