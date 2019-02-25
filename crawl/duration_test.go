@@ -29,4 +29,15 @@ func TestUnmarshalJSON(t *testing.T) {
 	if d.Duration != duration1d.Duration {
 		t.Errorf("Expected 24h, got %v\n", d.Duration)
 	}
+
+	unmarshalErr := d.UnmarshalJSON([]byte(""))
+	if unmarshalErr == nil {
+		t.Error("expected UnmarshalJSON error")
+	}
+
+	parseErr := d.UnmarshalJSON([]byte("\"x\""))
+	if parseErr == nil {
+		t.Error("expected duration parse error")
+	}
+
 }
