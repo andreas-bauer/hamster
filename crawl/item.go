@@ -17,8 +17,9 @@ func NewItem(id, url, FileNameExtensions string) (*Item, error) {
 		return nil, err
 	}
 	return &Item{
-		ID:      id,
-		Request: request,
+		ID:                 id,
+		Request:            request,
+		FileNameExtensions: FileNameExtensions,
 	}, nil
 }
 
