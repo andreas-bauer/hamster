@@ -104,15 +104,15 @@ func TestGet(t *testing.T) {
 		t.Error(err)
 	}
 
-	if resp1.statusCode != resp2.statusCode {
+	if resp1.StatusCode() != resp2.StatusCode() {
 		t.Errorf("Expected status code %v, got %v\n", resp1.statusCode, resp2.statusCode)
 	}
 
-	if resp1.retries != resp2.retries {
+	if resp1.Retries() != resp2.Retries() {
 		t.Errorf("Expected retries %v, got %v\n", resp1.retries, resp2.retries)
 	}
 
-	if bytes.Compare(resp1.payload, resp2.payload) != 0 {
+	if bytes.Compare(resp1.Payload(), resp2.Payload()) != 0 {
 		t.Errorf("Expected status code %v, got %v\n", resp1.payload, resp2.payload)
 	}
 }
