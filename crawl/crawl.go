@@ -9,15 +9,15 @@ import (
 	"github.com/michaeldorner/hamster/store"
 )
 
-type Feed func(Configuration, http.Client, *store.Repository) <-chan Item
+type Feed func(*Configuration, *http.Client, *store.Repository) <-chan Item
 
-func Run(config Configuration, feed Feed) error {
-	repository, err := store.NewRepository(config.OutDir)
+func Run(config *Configuration, feed Feed) error {
+	repository, err := store.NewRepository(config.OutDir())
 	if err != nil {
 		return err
 	}
 
-	client := http.NewClient(config.Timeout.Duration, config.MaxRetries)
+	client := http.NewClient(config.Timeout(), config.MaxRetries())
 
 	jsonData, parseErr := config.JSON()
 	if parseErr != nil {
@@ -30,7 +30,7 @@ func Run(config Configuration, feed Feed) error {
 	}
 
 	afterFeed := feed(config, client, repository)
-	afterPayload := get(client, afterFeed, config.ParallelRequests)
+	afterPayload := get(client, afterFeed, config.ParallelRequests())
 	afterPersist := persist(repository, afterPayload)
 	done := log(repository, afterPersist)
 
@@ -38,7 +38,7 @@ func Run(config Configuration, feed Feed) error {
 	return err
 }
 
-func get(client http.Client, in <-chan Item, numParallelRequests uint) <-chan Item {
+func get(client *http.Client, in <-chan Item, numParallelRequests uint) <-chan Item {
 	out := make(chan Item)
 
 	go func() {
@@ -49,7 +49,7 @@ func get(client http.Client, in <-chan Item, numParallelRequests uint) <-chan It
 			go func() {
 				defer parallelWaitGroup.Done()
 				for item := range in {
-					response := client.Get(item.URL)
+					response, _ := client.Do(item.Request)
 					if response.StatusCode == 200 {
 						item.Response = response
 						out <- item
@@ -87,7 +87,7 @@ func log(repository *store.Repository, in <-chan Item) <-chan bool {
 		}
 		for item := range in {
 			timestamp := time.Now()
-			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), item.Response.StatusCode, item.URL, item.Response.TimeToCrawl.String())
+			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), item.Response.StatusCode, item.Request.URL, item.Response.TimeToCrawl.String())
 			logFile.WriteString(str)
 		}
 		close(done)

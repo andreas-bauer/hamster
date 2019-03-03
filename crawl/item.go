@@ -1,12 +1,25 @@
 package crawl
 
-import "github.com/michaeldorner/hamster/http"
+import (
+	"github.com/michaeldorner/hamster/http"
+)
 
 type Item struct {
 	ID                 string
-	URL                string
-	Response           http.Response
+	Request            *http.Request
+	Response           *http.Response
 	FileNameExtensions string
+}
+
+func NewItem(id, url, FileNameExtensions string) (*Item, error) {
+	request, err := http.NewGetRequest(url)
+	if err != nil {
+		return nil, err
+	}
+	return &Item{
+		ID:      id,
+		Request: request,
+	}, nil
 }
 
 func (item Item) FileName() string {

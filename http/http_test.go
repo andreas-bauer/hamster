@@ -58,7 +58,15 @@ func TestPayload(t *testing.T) {
 	})
 
 	c := Client{hc: *mockHTTP, maxRetries: 1}
-	response := c.Get("https://mock/anything/123")
+	req, err := NewGetRequest("https://mock/anything/123")
+	if err != nil {
+		t.Error(err)
+	}
+
+	response, err := c.Do(req)
+	if err != nil {
+		t.Error(err)
+	}
 
 	if len(response.Payload) != 12 {
 		t.Errorf("Expected length of payload %v, got %v\n", 12, len(response.Payload))
@@ -74,12 +82,22 @@ func TestRetry(t *testing.T) {
 		}
 	})
 
-	retrys := uint(1)
+	retries := uint(1)
 	c := Client{hc: *mockHTTP, maxRetries: 1}
-	response := c.Get("https://mock/status/501")
 
-	if response.Retries != retrys {
-		t.Errorf("Expected %v retrys, got %v\n", retrys, response.Retries)
+	req, err := NewGetRequest("https://mock/status/501")
+	if err != nil {
+		t.Error(err)
+	}
+
+	response, _ := c.Do(req) // 501 and error is expected
+
+	if response.StatusCode != 501 {
+		t.Errorf("Expected status code %v , got %v\n", 501, response.StatusCode)
+	}
+
+	if response.Retries != retries {
+		t.Errorf("Expected %v retrys, got %v\n", retries, response.Retries)
 	}
 }
 

@@ -8,8 +8,8 @@ import (
 func TestFileName(t *testing.T) {
 	item := Item{
 		ID:                 "0001",
-		URL:                "https://www.google.com",
-		Response:           http.Response{},
+		Request:            &http.Request{},
+		Response:           &http.Response{},
 		FileNameExtensions: "json",
 	}
 	if item.FileName() != "0001.json" {

@@ -10,14 +10,23 @@ import (
 )
 
 var UnexpectedPanicErr = errors.New("unexpected HTTP client panic occured")
+var MaxRetriesExceededErr = errors.New("max retries exceeded")
+
+type Request = http.Request
+
+func NewGetRequest(url string) (*Request, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	_req_ := Request(*req)
+	return &_req_, err
+}
 
 type Client struct {
 	hc         http.Client
 	maxRetries uint
 }
 
-func NewClient(timeOut time.Duration, maxRetries uint) Client {
-	return Client{
+func NewClient(timeOut time.Duration, maxRetries uint) *Client {
+	return &Client{
 		hc: http.Client{
 			Timeout: time.Duration(timeOut),
 		},
@@ -32,8 +41,16 @@ type Response struct {
 	Payload     []byte
 }
 
-func (client Client) Get(url string) Response {
-	response := Response{}
+func (client Client) Get(url string) (*Response, error) {
+	req, err := NewGetRequest(url)
+	if err != nil {
+		return nil, err
+	}
+	return client.Do(req)
+}
+
+func (client Client) Do(request *Request) (*Response, error) {
+	response := &Response{}
 	startTime := time.Now()
 
 	for retry := uint(0); retry <= client.maxRetries; retry++ {
@@ -45,7 +62,7 @@ func (client Client) Get(url string) Response {
 			time.Sleep(backoff + jitter)
 		}
 
-		r, err := client.hc.Get(url)
+		r, err := client.hc.Do(request)
 		response.TimeToCrawl = time.Since(startTime)
 
 		if err == nil {
@@ -55,12 +72,12 @@ func (client Client) Get(url string) Response {
 				data, err := ioutil.ReadAll(r.Body)
 				if err == nil {
 					response.Payload = data
-					return response
+					return response, err
 				}
 			}
 		}
 	}
-	return response
+	return response, MaxRetriesExceededErr
 }
 
 func (client Client) GetHTTPStatus(url string) int {

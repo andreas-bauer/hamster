@@ -8,26 +8,21 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 )
 
-var testConfiguration Configuration = Configuration{
-	URL:              "https://jsonplaceholder.typicode.com/todos/",
-	OutDir:           "./repository",
-	MaxRetries:       2,
-	Timeout:          Duration{time.Duration(10) * time.Second},
-	ParallelRequests: 1,
-}
-
-var feed Feed = func(configuration Configuration, client http.Client, repository *store.Repository) <-chan Item {
+var feed Feed = func(configuration *Configuration, client *http.Client, repository *store.Repository) <-chan Item {
 	items := make(chan Item)
 	go func() {
 		defer close(items)
 		for i := 1; i < 3; i++ {
 			id := fmt.Sprint(i)
+			req, err := http.NewGetRequest(configuration.URL() + id)
+			if err != nil {
+				panic(err)
+			}
 			items <- Item{
 				ID:                 id,
-				URL:                configuration.URL + id,
+				Request:            req,
 				FileNameExtensions: "json",
 			}
 		}
@@ -38,14 +33,49 @@ var feed Feed = func(configuration Configuration, client http.Client, repository
 
 func TestMain(m *testing.M) {
 	retCode := m.Run()
-	os.RemoveAll(testConfiguration.OutDir)
+	os.RemoveAll("./repository/")
 	os.Exit(retCode)
 }
 
 func TestCrawl(t *testing.T) {
+	var feed Feed = func(configuration *Configuration, client *http.Client, repository *store.Repository) <-chan Item {
+		items := make(chan Item)
+		go func() {
+			defer close(items)
+			for i := 1; i < 3; i++ {
+				id := fmt.Sprint(i)
+				req, err := http.NewGetRequest(configuration.URL() + id)
+				if err != nil {
+					t.Error(err)
+				}
+				items <- Item{
+					ID:                 id,
+					Request:            req,
+					FileNameExtensions: "json",
+				}
+			}
+
+		}()
+		return items
+	}
+
+	var configurationJSONData = `{
+		"url": "https://jsonplaceholder.typicode.com/todos/",
+		"feed": {},
+		"outDir": "./repository/",
+		"maxRetries": 2,
+		"timeout": "10s",
+		"parallelRequests": 1
+	}`
+
+	testConfiguration, err := UnmarshalConfiguration([]byte(configurationJSONData))
+	if err != nil {
+		t.Error(err)
+	}
+
 	Run(testConfiguration, feed)
 	for i := 1; i < 3; i++ {
-		_, err := ioutil.ReadFile(filepath.Join(testConfiguration.OutDir, "data", fmt.Sprintf("%v.json", i)))
+		_, err := ioutil.ReadFile(filepath.Join(testConfiguration.OutDir(), "data", fmt.Sprintf("%v.json", i)))
 		if err != nil {
 			t.Error(err)
 		}
