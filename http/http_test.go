@@ -68,8 +68,8 @@ func TestPayload(t *testing.T) {
 		t.Error(err)
 	}
 
-	if len(response.Payload) != 12 {
-		t.Errorf("Expected length of payload %v, got %v\n", 12, len(response.Payload))
+	if len(response.Payload()) != 12 {
+		t.Errorf("Expected length of payload %v, got %v\n", 12, len(response.Payload()))
 	}
 }
 
@@ -92,12 +92,12 @@ func TestRetry(t *testing.T) {
 
 	response, _ := c.Do(req) // 501 and error is expected
 
-	if response.StatusCode != 501 {
-		t.Errorf("Expected status code %v , got %v\n", 501, response.StatusCode)
+	if response.StatusCode() != 501 {
+		t.Errorf("Expected status code %v , got %v\n", 501, response.StatusCode())
 	}
 
-	if response.Retries != retries {
-		t.Errorf("Expected %v retrys, got %v\n", retries, response.Retries)
+	if response.Retries() != retries {
+		t.Errorf("Expected %v retrys, got %v\n", retries, response.Retries())
 	}
 }
 

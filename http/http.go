@@ -35,13 +35,29 @@ func NewClient(timeOut time.Duration, maxRetries uint) *Client {
 }
 
 type Response struct {
-	StatusCode  int
-	TimeToCrawl time.Duration
-	Retries     uint
-	Payload     []byte
+	statusCode  int
+	timeToCrawl time.Duration
+	retries     uint
+	payload     []byte
 }
 
-func (client Client) Get(url string) (*Response, error) {
+func (resp *Response) StatusCode() int {
+	return resp.statusCode
+}
+
+func (resp *Response) TimeToCrawl() time.Duration {
+	return resp.timeToCrawl
+}
+
+func (resp *Response) Retries() uint {
+	return resp.retries
+}
+
+func (resp *Response) Payload() []byte {
+	return resp.payload
+}
+
+func (client *Client) Get(url string) (*Response, error) {
 	req, err := NewGetRequest(url)
 	if err != nil {
 		return nil, err
@@ -49,12 +65,12 @@ func (client Client) Get(url string) (*Response, error) {
 	return client.Do(req)
 }
 
-func (client Client) Do(request *Request) (*Response, error) {
+func (client *Client) Do(request *Request) (*Response, error) {
 	response := &Response{}
 	startTime := time.Now()
 
 	for retry := uint(0); retry <= client.maxRetries; retry++ {
-		response.Retries = retry
+		response.retries = retry
 		if retry > 0 {
 			rand.Seed(time.Now().UnixNano())
 			jitter := time.Duration(rand.Intn(500)) * time.Millisecond
@@ -63,15 +79,15 @@ func (client Client) Do(request *Request) (*Response, error) {
 		}
 
 		r, err := client.hc.Do(request)
-		response.TimeToCrawl = time.Since(startTime)
+		response.timeToCrawl = time.Since(startTime)
 
 		if err == nil {
 			defer r.Body.Close()
-			response.StatusCode = r.StatusCode
+			response.statusCode = r.StatusCode
 			if r.StatusCode == 200 {
 				data, err := ioutil.ReadAll(r.Body)
 				if err == nil {
-					response.Payload = data
+					response.payload = data
 					return response, err
 				}
 			}
@@ -80,7 +96,7 @@ func (client Client) Do(request *Request) (*Response, error) {
 	return response, MaxRetriesExceededErr
 }
 
-func (client Client) GetHTTPStatus(url string) int {
+func (client *Client) GetHTTPStatus(url string) int {
 	response, err := client.hc.Get(url)
 	if err != nil {
 		return 444

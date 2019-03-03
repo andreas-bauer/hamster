@@ -50,7 +50,7 @@ func get(client *http.Client, in <-chan Item, numParallelRequests uint) <-chan I
 				defer parallelWaitGroup.Done()
 				for item := range in {
 					response, _ := client.Do(item.Request)
-					if response.StatusCode == 200 {
+					if response.StatusCode() == 200 {
 						item.Response = response
 						out <- item
 					}
@@ -67,7 +67,7 @@ func persist(repository *store.Repository, in <-chan Item) <-chan Item {
 	out := make(chan Item)
 	go func() {
 		for item := range in {
-			err := repository.StorePayload(item.FileName(), item.Response.Payload)
+			err := repository.StorePayload(item.FileName(), item.Response.Payload())
 			if err != nil {
 				panic(err)
 			}
@@ -87,7 +87,7 @@ func log(repository *store.Repository, in <-chan Item) <-chan bool {
 		}
 		for item := range in {
 			timestamp := time.Now()
-			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), item.Response.StatusCode, item.Request.URL, item.Response.TimeToCrawl.String())
+			str := fmt.Sprintf("%v\t%v\t%v\t%v\n", timestamp.Format(time.RFC3339), item.Response.StatusCode(), item.Request.URL, item.Response.TimeToCrawl().String())
 			logFile.WriteString(str)
 		}
 		close(done)
