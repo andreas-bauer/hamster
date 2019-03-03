@@ -115,6 +115,11 @@ func TestGet(t *testing.T) {
 	if bytes.Compare(resp1.Payload(), resp2.Payload()) != 0 {
 		t.Errorf("Expected status code %v, got %v\n", resp1.payload, resp2.payload)
 	}
+
+	_, err = c.Get("")
+	if err != nil {
+		t.Error("Expected error due to wrong URL, got no error")
+	}
 }
 
 func TestRetry(t *testing.T) {
