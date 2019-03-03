@@ -9,7 +9,9 @@ import (
 
 var configurationJSONData = `{
 	"url": "https://android-review.googlesource.com",
-	"feed": {},
+	"feed": {
+		"f": 1
+	},
 	"outDir": "./android/",
 	"maxRetries": 10,
 	"timeout": "2m0s",
@@ -38,15 +40,13 @@ func TestUnmarshal(t *testing.T) {
 	if configuration.ParallelRequests() != 2 {
 		t.Error("Expecting 2 for ParallelRequests, got", configuration.ParallelRequests())
 	}
-}
 
-/*
-func TestUnmarshalConfiguration(t *testing.T) {
-	_, err := UnmarshalConfiguration([]byte(configurationJSONData))
-	if err != nil {
-		t.Error("Configuration Unmarshal error", err)
+	m, ok := configuration.Feed().(map[string]interface{})
+
+	if !ok || int(m["f"].(float64)) != 1 {
+		t.Errorf("Expecting `map[f:1]`, got %v\n", m)
 	}
-}*/
+}
 
 func TestJSON(t *testing.T) {
 	configuration := Configuration{}
