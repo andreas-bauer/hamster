@@ -49,10 +49,11 @@ func TestGetHTTPStatus(t *testing.T) {
 }
 
 func TestPayload(t *testing.T) {
+	payload := "Some Payload"
 	mockHTTP := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
 			StatusCode: 200,
-			Body:       ioutil.NopCloser(bytes.NewBufferString("Some Payload")),
+			Body:       ioutil.NopCloser(bytes.NewBufferString(payload)),
 			Header:     make(http.Header),
 		}
 	})
@@ -68,8 +69,51 @@ func TestPayload(t *testing.T) {
 		t.Error(err)
 	}
 
-	if len(response.Payload()) != 12 {
-		t.Errorf("Expected length of payload %v, got %v\n", 12, len(response.Payload()))
+	if bytes.Compare(response.payload, []byte(payload)) != 0 {
+		t.Errorf("Expected payload %v, got %v\n", payload, response.payload)
+	}
+
+	if response.TimeToCrawl() == time.Duration(0) {
+		t.Errorf("Expected longer time to crawl than 0 ns\n")
+	}
+}
+
+func TestGet(t *testing.T) {
+	mockHTTP := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: 200,
+			Body:       ioutil.NopCloser(bytes.NewBufferString("0")),
+			Header:     make(http.Header),
+		}
+	})
+
+	c := Client{hc: *mockHTTP, maxRetries: 1}
+	url := "https://mock/status/200"
+	resp1, err := c.Get(url)
+	if err != nil {
+		t.Error(err)
+	}
+
+	req, err := NewGetRequest(url)
+	if err != nil {
+		t.Error(err)
+	}
+
+	resp2, err := c.Do(req)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if resp1.statusCode != resp2.statusCode {
+		t.Errorf("Expected status code %v, got %v\n", resp1.statusCode, resp2.statusCode)
+	}
+
+	if resp1.retries != resp2.retries {
+		t.Errorf("Expected retries %v, got %v\n", resp1.retries, resp2.retries)
+	}
+
+	if bytes.Compare(resp1.payload, resp2.payload) != 0 {
+		t.Errorf("Expected status code %v, got %v\n", resp1.payload, resp2.payload)
 	}
 }
 
