@@ -1,8 +1,9 @@
 package crawl
 
 import (
-	"github.com/michaeldorner/hamster/http"
 	"testing"
+
+	"github.com/michaeldorner/hamster/http"
 )
 
 func TestFileName(t *testing.T) {
