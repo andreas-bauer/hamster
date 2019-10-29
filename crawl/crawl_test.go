@@ -2,12 +2,13 @@ package crawl
 
 import (
 	"fmt"
-	"github.com/michaeldorner/hamster/http"
-	"github.com/michaeldorner/hamster/store"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/michaeldorner/hamster/http"
+	"github.com/michaeldorner/hamster/store"
 )
 
 var feed Feed = func(configuration *Configuration, client *http.Client, repository *store.Repository) <-chan Item {
